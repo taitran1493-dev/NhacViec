@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Nhắc Việc Online & Đồng Bộ Google Sheets</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#2563eb',
+                            600: '#1d4ed8',
+                            700: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/style.css">
+    <!-- Google Fonts: Be Vietnam Pro -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen antialiased flex flex-col">
+
+    <!-- Top Navigation Bar -->
+    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-emerald-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+                    <i data-lucide="bell-ring" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold text-slate-900 text-base sm:text-lg tracking-tight">Mitsubishi BTH TaskHub</span>
+                        <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">Google Sheets Sync</span>
+                    </div>
+                    <p class="text-xs text-slate-500 hidden sm:block">Nhắc việc trực tuyến & phân công người thực hiện qua Gmail</p>
+                </div>
+            </div>
+
+            <!-- Server Status & Actions -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- Clock -->
+                <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-xs font-medium text-slate-600">
+                    <i data-lucide="clock" class="w-3.5 h-3.5 text-blue-600"></i>
+                    <span id="liveClock">--:--:--</span>
+                </div>
+
+                <!-- Sync Google Sheet Button -->
+                <button onclick="triggerSheetSync()" id="btnSyncHeader" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold text-xs border border-emerald-200 shadow-sm transition-all">
+                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                    <span class="hidden sm:inline">Đồng Bộ Sheet</span>
+                </button>
+
+                <!-- New Task Button -->
+                <button onclick="openTaskModal()" class="flex items-center gap-1.5 px-3.5 py-1.5 sm:py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm shadow-md shadow-blue-500/25 transition-all">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    <span>Thêm Việc</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-5">
+
+        <!-- GOOGLE SHEETS LIVE INTEGRATION CARD -->
+        <div class="bg-gradient-to-r from-emerald-50 via-teal-50 to-blue-50 border border-emerald-200/90 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+                <div class="flex items-start sm:items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/20 shrink-0">
+                        <i data-lucide="sheet" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <h3 class="font-bold text-slate-900 text-sm sm:text-base">Đồng Bộ Google Sheets Trực Tuyến</h3>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-200/80 text-emerald-900">3 Sheet: Danh Sach Cong Viec • NhanSu • BaoCao</span>
+                        </div>
+                        <p class="text-xs text-slate-600 mt-0.5 flex flex-wrap items-center gap-2">
+                            <span>Mã Sheet: <strong class="font-mono text-slate-800">1UvZKWzGpycOIjFHcjrHonQoCuFOWIpqfE0Jdj4eeXbA</strong></span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Google Sheet Action Buttons -->
+                <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                    <button onclick="triggerSheetSync()" class="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm flex items-center justify-center gap-1.5 transition-all">
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                        <span>Đồng Bộ Ngay</span>
+                    </button>
+                    <button onclick="openSheetTemplateModal()" class="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-300 text-xs font-semibold shadow-sm flex items-center justify-center gap-1.5 transition-all">
+                        <i data-lucide="copy" class="w-3.5 h-3.5 text-emerald-600"></i>
+                        <span>Xem & Copy Mẫu 3 Sheet</span>
+                    </button>
+                    <a href="https://docs.google.com/spreadsheets/d/1UvZKWzGpycOIjFHcjrHonQoCuFOWIpqfE0Jdj4eeXbA/edit?usp=sharing" target="_blank" class="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold shadow-sm flex items-center justify-center gap-1.5 transition-all">
+                        <i data-lucide="external-link" class="w-3.5 h-3.5 text-blue-600"></i>
+                        <span>Mở Google Sheet</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Email Setup Pills -->
+            <div class="pt-2 border-t border-emerald-200/60 flex flex-wrap items-center justify-between text-xs gap-2">
+                <div class="flex flex-wrap items-center gap-3">
+                    <span class="flex items-center gap-1 text-slate-600">
+                        <i data-lucide="send" class="w-3.5 h-3.5 text-blue-600"></i>
+                        <span>Mail gửi:</span>
+                        <strong class="font-mono text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200">tttai.mitsubishi.bth@gmail.com</strong>
+                    </span>
+                    <span class="flex items-center gap-1 text-slate-600">
+                        <i data-lucide="inbox" class="w-3.5 h-3.5 text-emerald-600"></i>
+                        <span>Mail nhận chính:</span>
+                        <strong class="font-mono text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200">taitran.1493@gmail.com</strong>
+                    </span>
+                </div>
+                <div class="text-[11px] text-slate-500 flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>Tự động quét nhắc việc: 30s • Tự động sync Sheet: 5 phút</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metrics Overview Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <div class="text-xs font-medium text-slate-500 uppercase tracking-wider">Tổng công việc</div>
+                    <div class="text-2xl font-bold text-slate-900 mt-1" id="statTotalTasks">0</div>
+                    <div class="text-xs text-slate-400 mt-0.5">Lịch trình đang chạy</div>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+                    <i data-lucide="list-todo" class="w-5 h-5"></i>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <div class="text-xs font-medium text-amber-600 uppercase tracking-wider">Đang chờ xử lý</div>
+                    <div class="text-2xl font-bold text-amber-700 mt-1" id="statPendingTasks">0</div>
+                    <div class="text-xs text-amber-600/70 mt-0.5">Cần thực hiện hôm nay</div>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600">
+                    <i data-lucide="hourglass" class="w-5 h-5"></i>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <div class="text-xs font-medium text-emerald-600 uppercase tracking-wider">Đã hoàn thành</div>
+                    <div class="text-2xl font-bold text-emerald-700 mt-1" id="statCompletedTasks">0</div>
+                    <div class="text-xs text-emerald-600/70 mt-0.5" id="statCompletionRate">0% tiến độ</div>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+                    <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <div class="text-xs font-medium text-slate-500 uppercase tracking-wider">Nhân sự phụ trách</div>
+                    <div class="text-2xl font-bold text-slate-900 mt-1" id="statTotalEmployees">0</div>
+                    <div class="text-xs text-slate-400 mt-0.5">Nhận mail thông báo</div>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Bar Navigation -->
+        <div class="bg-white rounded-xl border border-slate-200 p-1.5 flex flex-wrap items-center justify-between gap-2 shadow-sm">
+            <div class="flex items-center gap-1 sm:gap-2">
+                <button onclick="switchTab('today')" id="tabBtn-today" class="tab-btn active px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition-all">
+                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                    <span>Lịch Hôm Nay (Sáng - Trưa - Chiều)</span>
+                </button>
+                <button onclick="switchTab('all')" id="tabBtn-all" class="tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1.5 transition-all">
+                    <i data-lucide="layers" class="w-4 h-4"></i>
+                    <span>Tất Cả Công Việc</span>
+                </button>
+                <button onclick="switchTab('team')" id="tabBtn-team" class="tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1.5 transition-all">
+                    <i data-lucide="user-check" class="w-4 h-4"></i>
+                    <span>Đội Ngũ Nhân Sự</span>
+                </button>
+                <button onclick="switchTab('settings')" id="tabBtn-settings" class="tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1.5 transition-all">
+                    <i data-lucide="settings" class="w-4 h-4"></i>
+                    <span>Cấu Hình Gmail & Sheet</span>
+                </button>
+            </div>
+
+            <!-- Date Label -->
+            <div class="text-xs font-semibold text-slate-500 px-3 py-1 flex items-center gap-1.5">
+                <i data-lucide="calendar-days" class="w-3.5 h-3.5 text-blue-600"></i>
+                <span id="currentDateDisplay">Hôm nay</span>
+            </div>
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- TAB 1: LỊCH HÔM NAY (SÁNG - TRƯA - CHIỀU)               -->
+        <!-- ======================================================== -->
+        <div id="tabContent-today" class="tab-pane space-y-6">
+
+            <!-- Banner: Preset Generator Callout -->
+            <div class="bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-teal-500/10 border border-blue-200/80 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-11 h-11 rounded-xl bg-white border border-blue-200 flex items-center justify-center text-blue-600 shadow-sm shrink-0">
+                        <i data-lucide="calendar-clock" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-2">
+                            <span>Quy trình 1 ngày: Đăng 3 bài (Sáng - Trưa - Chiều)</span>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Khuyên Dùng</span>
+                        </h3>
+                        <p class="text-xs text-slate-600 mt-0.5">
+                            Tự động nhắc việc qua Gmail: <strong>Ca Sáng (09:00)</strong> • <strong>Ca Trưa (12:00)</strong> • <strong>Ca Chiều (16:30)</strong>.
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 w-full md:w-auto">
+                    <button onclick="openPresetModal()" class="w-full md:w-auto px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm shadow-md shadow-blue-600/20 flex items-center justify-center gap-2 transition-all shrink-0">
+                        <i data-lucide="zap" class="w-4 h-4"></i>
+                        <span>Tạo Nhanh Lịch 3 Ca</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3 Shifts Columns Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+
+                <!-- CA SÁNG -->
+                <div class="bg-white rounded-2xl border border-amber-200 shadow-sm overflow-hidden flex flex-col">
+                    <div class="bg-gradient-to-r from-amber-500 to-amber-600 p-4 text-white flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <span class="text-xl">🌅</span>
+                            <div>
+                                <h4 class="font-bold text-sm tracking-wide">CA SÁNG</h4>
+                                <span class="text-[11px] text-amber-100 font-medium">Khung giờ: 08:00 - 11:30</span>
+                            </div>
+                        </div>
+                        <span id="morningCountBadge" class="text-xs font-bold px-2 py-0.5 rounded-full bg-white/20 text-white border border-white/25">0 việc</span>
+                    </div>
+                    <div id="morningTasksList" class="p-3.5 space-y-3 flex-1 min-h-[160px] bg-slate-50/50">
+                        <!-- Loaded dynamically -->
+                    </div>
+                    <div class="p-3 bg-white border-t border-slate-100">
+                        <button onclick="openTaskModalWithSlot('morning', '09:00')" class="w-full py-2 rounded-lg border border-dashed border-amber-300 hover:bg-amber-50/50 text-amber-700 font-semibold text-xs flex items-center justify-center gap-1.5 transition-all">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                            <span>Thêm việc Ca Sáng</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- CA TRƯA -->
+                <div class="bg-white rounded-2xl border border-orange-200 shadow-sm overflow-hidden flex flex-col">
+                    <div class="bg-gradient-to-r from-orange-500 to-orange-600 p-4 text-white flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <span class="text-xl">☀️</span>
+                            <div>
+                                <h4 class="font-bold text-sm tracking-wide">CA TRƯA</h4>
+                                <span class="text-[11px] text-orange-100 font-medium">Khung giờ: 11:30 - 14:00</span>
+                            </div>
+                        </div>
+                        <span id="noonCountBadge" class="text-xs font-bold px-2 py-0.5 rounded-full bg-white/20 text-white border border-white/25">0 việc</span>
+                    </div>
+                    <div id="noonTasksList" class="p-3.5 space-y-3 flex-1 min-h-[160px] bg-slate-50/50">
+                        <!-- Loaded dynamically -->
+                    </div>
+                    <div class="p-3 bg-white border-t border-slate-100">
+                        <button onclick="openTaskModalWithSlot('noon', '12:00')" class="w-full py-2 rounded-lg border border-dashed border-orange-300 hover:bg-orange-50/50 text-orange-700 font-semibold text-xs flex items-center justify-center gap-1.5 transition-all">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                            <span>Thêm việc Ca Trưa</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- CA CHIỀU -->
+                <div class="bg-white rounded-2xl border border-indigo-200 shadow-sm overflow-hidden flex flex-col">
+                    <div class="bg-gradient-to-r from-indigo-600 to-blue-600 p-4 text-white flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <span class="text-xl">🌇</span>
+                            <div>
+                                <h4 class="font-bold text-sm tracking-wide">CA CHIỀU</h4>
+                                <span class="text-[11px] text-indigo-100 font-medium">Khung giờ: 14:00 - 18:00</span>
+                            </div>
+                        </div>
+                        <span id="afternoonCountBadge" class="text-xs font-bold px-2 py-0.5 rounded-full bg-white/20 text-white border border-white/25">0 việc</span>
+                    </div>
+                    <div id="afternoonTasksList" class="p-3.5 space-y-3 flex-1 min-h-[160px] bg-slate-50/50">
+                        <!-- Loaded dynamically -->
+                    </div>
+                    <div class="p-3 bg-white border-t border-slate-100">
+                        <button onclick="openTaskModalWithSlot('afternoon', '16:30')" class="w-full py-2 rounded-lg border border-dashed border-indigo-300 hover:bg-indigo-50/50 text-indigo-700 font-semibold text-xs flex items-center justify-center gap-1.5 transition-all">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                            <span>Thêm việc Ca Chiều</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- CA TỐI & NHIỆM VỤ KHÁC -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-5 py-3.5 bg-slate-100/80 border-b border-slate-200 flex items-center justify-between">
+                    <div class="flex items-center gap-2 font-bold text-slate-800 text-sm">
+                        <span class="text-base">🌙</span>
+                        <span>Ca Tối & Nhiệm Vụ Khác (Báo cáo, kiểm tra chỉ số...)</span>
+                    </div>
+                    <button onclick="openTaskModalWithSlot('evening', '18:00')" class="text-xs text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-1">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i> Thêm việc
+                    </button>
+                </div>
+                <div id="eveningTasksList" class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- TAB 2: TẤT CẢ CÔNG VIỆC (QUẢN LÝ & BỘ LỌC)               -->
+        <!-- ======================================================== -->
+        <div id="tabContent-all" class="tab-pane hidden space-y-4">
+            <!-- Filter Bar -->
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+                <div class="flex-1 relative">
+                    <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                    <input type="text" id="taskSearchInput" oninput="filterAllTasks()" placeholder="Tìm kiếm theo tiêu đề hoặc mô tả..." class="w-full pl-10 pr-4 py-2 text-xs sm:text-sm rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <select id="filterSlotSelect" onchange="filterAllTasks()" class="px-3 py-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-blue-500">
+                        <option value="">Tất cả Ca làm việc</option>
+                        <option value="morning">🌅 Ca Sáng</option>
+                        <option value="noon">☀️ Ca Trưa</option>
+                        <option value="afternoon">🌇 Ca Chiều</option>
+                        <option value="evening">🌙 Ca Tối</option>
+                    </select>
+                    <select id="filterStatusSelect" onchange="filterAllTasks()" class="px-3 py-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-blue-500">
+                        <option value="">Tất cả Trạng thái</option>
+                        <option value="pending">⏳ Đang chờ</option>
+                        <option value="completed">✅ Đã hoàn thành</option>
+                    </select>
+                    <select id="filterAssigneeSelect" onchange="filterAllTasks()" class="px-3 py-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-blue-500">
+                        <option value="">Tất cả Nhân sự</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Tasks Table -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                <th class="py-3 px-4 w-12 text-center">Xong</th>
+                                <th class="py-3 px-4">Công Việc</th>
+                                <th class="py-3 px-4">Ca & Giờ Nhắc</th>
+                                <th class="py-3 px-4">Người Thực Hiện</th>
+                                <th class="py-3 px-4">Ưu Tiên</th>
+                                <th class="py-3 px-4">Lặp Lại</th>
+                                <th class="py-3 px-4 text-right">Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allTasksTableBody" class="divide-y divide-slate-100 text-xs sm:text-sm">
+                            <!-- Injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="allTasksEmptyState" class="hidden p-12 text-center text-slate-400">
+                    <i data-lucide="clipboard-list" class="w-12 h-12 mx-auto mb-3 text-slate-300"></i>
+                    <p class="font-medium">Chưa có công việc nào phù hợp với bộ lọc</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- TAB 3: ĐỘI NGŨ NHÂN SỰ & PHÂN CÔNG                       -->
+        <!-- ======================================================== -->
+        <div id="tabContent-team" class="tab-pane hidden space-y-5">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="font-bold text-slate-900 text-base">Danh Sách Nhân Sự & Người Thực Hiện</h3>
+                    <p class="text-xs text-slate-500">Mỗi nhân sự sẽ nhận email thông báo tự động từ Gmail khi tới hạn công việc</p>
+                </div>
+                <button onclick="openEmployeeModal()" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs sm:text-sm shadow-md shadow-blue-500/20 flex items-center gap-1.5 transition-all">
+                    <i data-lucide="user-plus" class="w-4 h-4"></i>
+                    <span>Thêm Nhân Sự Mới</span>
+                </button>
+            </div>
+
+            <!-- Employee Cards Grid -->
+            <div id="employeeGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Injected by JS -->
+            </div>
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- TAB 4: CẤU HÌNH GMAIL & GOOGLE SHEET & NHẬT KÝ            -->
+        <!-- ======================================================== -->
+        <div id="tabContent-settings" class="tab-pane hidden space-y-6">
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                <!-- Column 1: Config Form (7 cols) -->
+                <div class="lg:col-span-7 space-y-6">
+                    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                        <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+                                    <i data-lucide="mail" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-slate-900 text-base">Cấu Hình Gmail Gửi Thông Báo</h3>
+                                    <p class="text-xs text-slate-500">Gửi mail nhắc việc tự động qua máy chủ Gmail SMTP</p>
+                                </div>
+                            </div>
+                            <span id="smtpStatusBadge" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">
+                                Đang kiểm tra...
+                            </span>
+                        </div>
+
+                        <form id="settingsForm" onsubmit="saveSettings(event)" class="space-y-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Mail Gửi Thông Báo</label>
+                                    <input type="email" id="setting_smtp_email" value="tttai.mitsubishi.bth@gmail.com" required class="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Mail Nhận Thông Báo Chính</label>
+                                    <input type="email" id="setting_primary_recipient" value="taitran.1493@gmail.com" required class="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                    Mật Khẩu Ứng Dụng (Google App Password của Mail Gửi - 16 ký tự)
+                                </label>
+                                <div class="relative">
+                                    <input type="password" id="setting_smtp_password" placeholder="Nhập 16 ký tự mật khẩu ứng dụng tạo từ tài khoản Google" class="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                                    <button type="button" onclick="togglePasswordVisibility('setting_smtp_password')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                                        <i data-lucide="eye" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                                <p class="text-[11px] text-amber-600 mt-1">
+                                    * Lấy từ tài khoản Google của <strong>tttai.mitsubishi.bth@gmail.com</strong> (xem hướng dẫn 4 bước bên phải).
+                                </p>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Link Google Sheets Đồng Bộ</label>
+                                <input type="text" id="setting_google_sheet_url" value="https://docs.google.com/spreadsheets/d/1UvZKWzGpycOIjFHcjrHonQoCuFOWIpqfE0Jdj4eeXbA/edit?usp=sharing" class="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono text-xs">
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Tên Người Gửi Hiển Thị</label>
+                                    <input type="text" id="setting_sender_name" value="Mitsubishi BTH - Nhắc Việc Tự Động" class="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Đường Dẫn Dashboard (App URL)</label>
+                                    <input type="text" id="setting_app_url" value="http://localhost:5000" class="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                                </div>
+                            </div>
+
+                            <div class="pt-2 space-y-2">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" id="setting_auto_remind_enabled" checked class="rounded text-blue-600 focus:ring-blue-500 w-4 h-4">
+                                    <span class="text-xs font-semibold text-slate-700">Kích hoạt Quét Nhắc Việc Định Kỳ (Mỗi 30 giây)</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" id="setting_auto_sync_sheets" checked class="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4">
+                                    <span class="text-xs font-semibold text-slate-700">Tự động đồng bộ từ Google Sheet (Mỗi 5 phút)</span>
+                                </label>
+                            </div>
+
+                            <div class="pt-4 border-t border-slate-100 flex flex-wrap items-center gap-3">
+                                <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm shadow-md shadow-blue-500/20 transition-all">
+                                    Lưu Cấu Hình
+                                </button>
+                                <button type="button" onclick="testSmtpConnection()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs sm:text-sm transition-all flex items-center gap-1.5">
+                                    <i data-lucide="send" class="w-4 h-4 text-blue-600"></i>
+                                    <span>Gửi Thử Email Test</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Column 2: Step-by-Step Google App Password Guide (5 cols) -->
+                <div class="lg:col-span-5 space-y-4">
+                    <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-6 rounded-2xl shadow-md border border-slate-700">
+                        <div class="flex items-center gap-2 text-amber-400 font-bold text-sm mb-3">
+                            <i data-lucide="help-circle" class="w-4 h-4"></i>
+                            <span>Cách lấy App Password cho mail gửi</span>
+                        </div>
+                        <ol class="space-y-3 text-xs text-slate-300">
+                            <li class="flex items-start gap-2">
+                                <span class="w-5 h-5 rounded-full bg-slate-700 text-amber-300 font-bold flex items-center justify-center shrink-0 text-[11px]">1</span>
+                                <span>Đăng nhập vào Google với tài khoản <strong>tttai.mitsubishi.bth@gmail.com</strong> và vào <a href="https://myaccount.google.com/security" target="_blank" class="text-blue-400 underline font-medium">Bảo mật (Security)</a>.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="w-5 h-5 rounded-full bg-slate-700 text-amber-300 font-bold flex items-center justify-center shrink-0 text-[11px]">2</span>
+                                <span>Bật <strong>Xác minh 2 bước (2-Step Verification)</strong> nếu chưa bật.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="w-5 h-5 rounded-full bg-slate-700 text-amber-300 font-bold flex items-center justify-center shrink-0 text-[11px]">3</span>
+                                <span>Tìm từ khóa <strong>"Mật khẩu ứng dụng"</strong> (App passwords) rồi bấm tạo với tên bất kỳ (VD: <em>Nhắc Việc BTH</em>).</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="w-5 h-5 rounded-full bg-slate-700 text-amber-300 font-bold flex items-center justify-center shrink-0 text-[11px]">4</span>
+                                <span>Sao chép chuỗi <strong>16 ký tự</strong> và dán vào ô Mật Khẩu Ứng Dụng bên trái.</span>
+                            </li>
+                        </ol>
+                        <div class="mt-4 pt-3 border-t border-slate-700/80 text-[11px] text-slate-400">
+                            💡 <em>Khi chưa có App Password, hệ thống vẫn lưu lịch và chạy ở chế độ mô phỏng an toàn, ghi nhận đầy đủ vào Nhật Ký.</em>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Audit Logs Section -->
+            <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div class="flex items-center gap-2.5">
+                        <i data-lucide="history" class="w-5 h-5 text-slate-600"></i>
+                        <h3 class="font-bold text-slate-900 text-base">Nhật Ký Thông Báo Đã Gửi (BaoCao)</h3>
+                    </div>
+                    <button onclick="clearLogs()" class="text-xs text-red-600 hover:text-red-700 font-semibold flex items-center gap-1">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        <span>Xóa nhật ký</span>
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-bold text-[10px]">
+                                <th class="py-2.5 px-3">Thời gian</th>
+                                <th class="py-2.5 px-3">Công việc</th>
+                                <th class="py-2.5 px-3">Người nhận</th>
+                                <th class="py-2.5 px-3">Mail Nhận</th>
+                                <th class="py-2.5 px-3">Trạng thái</th>
+                                <th class="py-2.5 px-3">Thông điệp</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logsTableBody" class="divide-y divide-slate-100">
+                            <!-- Injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="logsEmptyState" class="hidden p-8 text-center text-slate-400 text-xs">
+                    Chưa có nhật ký gửi email nào được ghi nhận.
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-auto border-t border-slate-200 bg-white py-4 text-center text-xs text-slate-500">
+        <p>Mitsubishi BTH TaskHub • Kết nối Google Sheets: <em>Danh Sach Cong Viec • NhanSu • BaoCao</em></p>
+    </footer>
+
+    <!-- ======================================================== -->
+    <!-- MODAL: XEM & COPY MẪU CỘT GOOGLE SHEETS                   -->
+    <!-- ======================================================== -->
+    <div id="sheetTemplateModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
+            <div class="px-6 py-4 bg-emerald-50 border-b border-emerald-100 flex items-center justify-between">
+                <div class="flex items-center gap-2 text-emerald-900 font-bold text-base">
+                    <i data-lucide="table" class="w-5 h-5 text-emerald-600"></i>
+                    <span>Cấu Trúc Cột Chuẩn Cho 3 Sheet Trong Google Sheets</span>
+                </div>
+                <button onclick="closeSheetTemplateModal()" class="w-8 h-8 rounded-lg hover:bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <p class="text-xs text-slate-600">
+                    Bấm nút <strong>"Sao Chép Bảng"</strong> bên dưới rồi mở Google Sheet, chọn ô <strong>A1</strong> và nhấn <strong>Ctrl + V</strong> để dán toàn bộ dữ liệu mẫu vào:
+                </p>
+
+                <!-- Sheet Tabs Selector -->
+                <div class="flex border-b border-slate-200 gap-2">
+                    <button onclick="switchTemplateTab('tasks')" id="tmplTab-tasks" class="px-4 py-2 text-xs font-bold border-b-2 border-emerald-600 text-emerald-700">
+                        1. Danh Sach Cong Viec
+                    </button>
+                    <button onclick="switchTemplateTab('employees')" id="tmplTab-employees" class="px-4 py-2 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800">
+                        2. NhanSu
+                    </button>
+                    <button onclick="switchTemplateTab('reports')" id="tmplTab-reports" class="px-4 py-2 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800">
+                        3. BaoCao
+                    </button>
+                </div>
+
+                <!-- Template Preview Box -->
+                <div class="relative">
+                    <textarea id="templateContentBox" readonly rows="7" class="w-full p-3 font-mono text-[11px] bg-slate-900 text-emerald-400 rounded-xl focus:outline-none"></textarea>
+                    <button onclick="copyTemplateToClipboard()" class="absolute top-2 right-2 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow flex items-center gap-1.5 transition-all">
+                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                        <span id="btnCopyLabel">Sao Chép Bảng</span>
+                    </button>
+                </div>
+
+                <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 flex items-start gap-2">
+                    <i data-lucide="info" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
+                    <div>
+                        <strong>Mẹo:</strong> Sau khi dán dữ liệu mẫu hoặc chỉnh sửa công việc trên Google Sheet, bạn chỉ cần bấm nút <strong>"Đồng Bộ Ngay"</strong> trên phần mềm để hệ thống cập nhật lịch nhắc mới nhất!
+                    </div>
+                </div>
+
+                <div class="pt-2 flex items-center justify-end">
+                    <button type="button" onclick="closeSheetTemplateModal()" class="px-5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold">
+                        Đóng
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- MODAL: THÊM / SỬA CÔNG VIỆC                               -->
+    <!-- ======================================================== -->
+    <div id="taskModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
+            <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                <h3 id="taskModalTitle" class="font-bold text-slate-900 text-base">Thêm Công Việc Mới</h3>
+                <button onclick="closeTaskModal()" class="w-8 h-8 rounded-lg hover:bg-slate-200 text-slate-500 flex items-center justify-center">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form id="taskForm" onsubmit="saveTask(event)" class="p-6 space-y-4">
+                <input type="hidden" id="taskForm_id">
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tiêu Đề Công Việc *</label>
+                    <input type="text" id="taskForm_title" placeholder="VD: Đăng bài Fanpage ca Sáng (Tips & Kiến thức)" required class="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Mô Tả Chi Tiết / Hướng Dẫn</label>
+                    <textarea id="taskForm_description" rows="2" placeholder="Ghi chú nội dung, hashtag, tài nguyên thiết kế cần dùng..." class="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Ca Làm Việc</label>
+                        <select id="taskForm_slot" onchange="syncSlotDefaultTime()" class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-blue-500">
+                            <option value="morning">🌅 Ca Sáng (08:00 - 11:30)</option>
+                            <option value="noon">☀️ Ca Trưa (11:30 - 14:00)</option>
+                            <option value="afternoon">🌇 Ca Chiều (14:00 - 18:00)</option>
+                            <option value="evening">🌙 Ca Tối (18:00 - 22:00)</option>
+                            <option value="custom">⏱️ Giờ Riêng Tùy Chọn</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Giờ Nhắc (HH:MM) *</label>
+                        <input type="time" id="taskForm_scheduled_time" required class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Người Thực Hiện</label>
+                        <select id="taskForm_assignee_id" class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-blue-500">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Mức Độ Ưu Tiên</label>
+                        <select id="taskForm_priority" class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-blue-500">
+                            <option value="medium">Bình thường</option>
+                            <option value="high">Ưu tiên cao</option>
+                            <option value="urgent">Khẩn cấp ⚡</option>
+                            <option value="low">Thấp</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="taskForm_is_recurring" checked class="rounded text-blue-600 focus:ring-blue-500 w-4 h-4">
+                        <span class="text-xs font-semibold text-slate-700">Lặp lại nhắc việc mỗi ngày (Hàng ngày đến giờ sẽ gửi mail)</span>
+                    </label>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
+                    <button type="button" onclick="closeTaskModal()" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-xs sm:text-sm font-semibold">
+                        Hủy
+                    </button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold shadow-md shadow-blue-500/20">
+                        Lưu Công Việc
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- MODAL: THÊM / SỬA NHÂN VIÊN                               -->
+    <!-- ======================================================== -->
+    <div id="employeeModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
+            <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                <h3 id="employeeModalTitle" class="font-bold text-slate-900 text-base">Thêm Nhân Sự Mới</h3>
+                <button onclick="closeEmployeeModal()" class="w-8 h-8 rounded-lg hover:bg-slate-200 text-slate-500 flex items-center justify-center">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form id="employeeForm" onsubmit="saveEmployee(event)" class="p-6 space-y-4">
+                <input type="hidden" id="empForm_id">
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Họ Và Tên *</label>
+                    <input type="text" id="empForm_name" placeholder="VD: Tài Trần" required class="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Email Gmail Nhận Thông Báo *</label>
+                    <input type="email" id="empForm_email" placeholder="VD: taitran.1493@gmail.com" required class="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                    <p class="text-[11px] text-slate-500 mt-1">Hòm thư nhận các thông báo ca làm việc trong ngày.</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Chức Vụ / Vai Trò</label>
+                        <input type="text" id="empForm_role" placeholder="VD: Quản lý / Content" class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Phòng Ban</label>
+                        <input type="text" id="empForm_department" placeholder="VD: Mitsubishi BTH" class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Màu Đại Diện</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" id="empForm_color" value="#2563EB" class="w-9 h-9 rounded-lg border border-slate-200 cursor-pointer">
+                        <span class="text-xs text-slate-500">Màu hiển thị trên thẻ và huy hiệu công việc</span>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
+                    <button type="button" onclick="closeEmployeeModal()" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-xs sm:text-sm font-semibold">
+                        Hủy
+                    </button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold shadow-md shadow-blue-500/20">
+                        Lưu Nhân Sự
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- MODAL: TẠO NHANH LỊCH 3 BÀI ĐĂNG MXH / NGÀY              -->
+    <!-- ======================================================== -->
+    <div id="presetModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
+            <div class="px-6 py-4 bg-blue-50 border-b border-blue-100 flex items-center justify-between">
+                <div class="flex items-center gap-2 text-blue-900 font-bold text-base">
+                    <i data-lucide="zap" class="w-5 h-5 text-blue-600"></i>
+                    <span>Tạo Lịch Nhanh 3 Bài Đăng / Ngày</span>
+                </div>
+                <button onclick="closePresetModal()" class="w-8 h-8 rounded-lg hover:bg-blue-100 text-blue-600 flex items-center justify-center">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <p class="text-xs text-slate-600">
+                    Tự động tạo 3 ca đăng bài mẫu cho hôm nay và phân công gửi thông báo:
+                </p>
+
+                <div class="space-y-2 text-xs">
+                    <div class="p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 flex items-center justify-between">
+                        <span>🌅 <strong>Bài 1 (Sáng 09:00):</strong> Chào ngày mới & Chia sẻ giá trị</span>
+                        <span class="font-bold">09:00</span>
+                    </div>
+                    <div class="p-2.5 rounded-lg bg-orange-50 border border-orange-200 text-orange-900 flex items-center justify-between">
+                        <span>☀️ <strong>Bài 2 (Trưa 12:00):</strong> Tương tác, Minigame, Q&A</span>
+                        <span class="font-bold">12:00</span>
+                    </div>
+                    <div class="p-2.5 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-900 flex items-center justify-between">
+                        <span>🌇 <strong>Bài 3 (Chiều 16:30):</strong> Sản phẩm & Khuyến mãi ngày</span>
+                        <span class="font-bold">16:30</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Giao Cho Nhân Sự Phụ Trách</label>
+                    <select id="presetAssigneeSelect" class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-blue-500">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
+                    <button type="button" onclick="closePresetModal()" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-xs sm:text-sm font-semibold">
+                        Hủy
+                    </button>
+                    <button type="button" onclick="confirmGeneratePreset()" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold shadow-md shadow-blue-600/20 flex items-center gap-1.5">
+                        <i data-lucide="check" class="w-4 h-4"></i>
+                        <span>Xác Nhận Tạo Lịch</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
+
+    <!-- Scripts -->
+    <script src="/static/app.js"></script>
+</body>
+</html>

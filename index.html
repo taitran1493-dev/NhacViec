@@ -1,0 +1,2001 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mitsubishi BTH - Hệ Thống Nhắc Việc & Đồng Bộ Google Sheets</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#2563eb',
+                            600: '#1d4ed8',
+                            700: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts: Be Vietnam Pro -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif; }
+        .tab-btn.active {
+            background-color: #2563eb;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+        }
+        .task-card {
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen antialiased flex flex-col">
+
+    <!-- Top Navigation Bar -->
+    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-emerald-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+                    <i data-lucide="bell-ring" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold text-slate-900 text-base sm:text-lg tracking-tight">Mitsubishi BTH TaskHub</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            Online (GitHub Pages)
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-500 hidden sm:block">Đồng bộ Google Sheets & Tự động nhắc việc qua Gmail</p>
+                </div>
+            </div>
+
+            <!-- Server Status & Quick Actions -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- Clock -->
+                <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-xs font-medium text-slate-600">
+                    <i data-lucide="clock" class="w-3.5 h-3.5 text-blue-600"></i>
+                    <span id="liveClock">--:--:--</span>
+                </div>
+
+                <!-- Desktop Notification Permission Button -->
+                <button onclick="requestNotificationPermission()" id="btnNotification" title="Bật thông báo màn hình & chuông nhắc việc" class="px-2.5 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-semibold flex items-center gap-1 transition-all">
+                    <i data-lucide="bell" class="w-3.5 h-3.5"></i>
+                    <span class="hidden sm:inline" id="btnNotificationText">Bật Chuông Nhắc</span>
+                </button>
+
+                <!-- Sync Google Sheet Button -->
+                <button onclick="syncFromGoogleSheets()" class="flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-md shadow-emerald-600/20 transition-all">
+                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                    <span>Đồng Bộ Sheet</span>
+                </button>
+
+                <!-- New Task Button -->
+                <button onclick="openTaskModal()" class="flex items-center gap-1.5 px-3.5 py-1.5 sm:py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm shadow-md shadow-blue-500/25 transition-all">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    <span>Thêm Việc</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-5">
+
+        <!-- GOOGLE SHEETS & EMAIL STATUS CARD -->
+        <div class="bg-gradient-to-r from-emerald-50 via-teal-50 to-blue-50 border border-emerald-200/90 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+                <div class="flex items-start sm:items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/20 shrink-0">
+                        <i data-lucide="sheet" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <h3 class="font-bold text-slate-900 text-sm sm:text-base">Liên Kết Google Sheets: <em>Danh Sach Cong Viec • NhanSu • BaoCao</em></h3>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-200/80 text-emerald-900">Chia Sẻ Trực Tuyến</span>
+                        </div>
+                        <p class="text-xs text-slate-600 mt-0.5">
+                            ID: <span class="font-mono text-slate-800 font-semibold" id="displaySheetId">1UvZKWzGpycOIjFHcjrHonQoCuFOWIpqfE0Jdj4eeXbA</span>
+                            <span class="text-slate-400 mx-1">•</span>
+                            <span id="syncStatusLabel" class="text-emerald-700 font-medium">Sẵn sàng đồng bộ trực tiếp không cần server</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Google Sheet Action Buttons -->
+                <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                    <button onclick="syncFromGoogleSheets()" class="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm flex items-center justify-center gap-1.5 transition-all">
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                        <span>Đồng Bộ Ngay</span>
+                    </button>
+                    <button onclick="openSheetTemplateModal()" class="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-300 text-xs font-semibold shadow-sm flex items-center justify-center gap-1.5 transition-all">
+                        <i data-lucide="copy" class="w-3.5 h-3.5 text-emerald-600"></i>
+                        <span>Xem Mẫu & Copy Dữ Liệu</span>
+                    </button>
+                    <a id="btnOpenSheetLink" href="https://docs.google.com/spreadsheets/d/1UvZKWzGpycOIjFHcjrHonQoCuFOWIpqfE0Jdj4eeXbA/edit?usp=sharing" target="_blank" class="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold shadow-sm flex items-center justify-center gap-1.5 transition-all">
+                        <i data-lucide="external-link" class="w-3.5 h-3.5 text-blue-600"></i>
+                        <span>Mở Google Sheet</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Email Badges Bar -->
+            <div class="pt-2 border-t border-emerald-200/60 flex flex-wrap items-center justify-between text-xs gap-2">
+                <div class="flex flex-wrap items-center gap-3">
+                    <span class="flex items-center gap-1 text-slate-600">
+                        <i data-lucide="send" class="w-3.5 h-3.5 text-blue-600"></i>
+                        <span>Mail gửi:</span>
+                        <strong class="font-mono text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200" id="badgeSenderEmail">tttai.mitsubishi.bth@gmail.com</strong>
+                    </span>
+                    <span class="flex items-center gap-1 text-slate-600">
+                        <i data-lucide="inbox" class="w-3.5 h-3.5 text-emerald-600"></i>
+                        <span>Mail nhận chính:</span>
+                        <strong class="font-mono text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200" id="badgeReceiverEmail">taitran.1493@gmail.com</strong>
+                    </span>
+                </div>
+                <div class="text-[11px] text-slate-500 flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>Tự động kiểm tra giờ nhắc mỗi 30s • Chạy trực tiếp trên trình duyệt</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metrics Overview Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <div class="text-xs font-medium text-slate-500 uppercase tracking-wider">Tổng công việc</div>
+                    <div class="text-2xl font-bold text-slate-900 mt-1" id="statTotalTasks">0</div>
+                    <div class="text-xs text-slate-400 mt-0.5">Nhiệm vụ đang quản lý</div>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+                    <i data-lucide="list-todo" class="w-5 h-5"></i>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <div class="text-xs font-medium text-amber-600 uppercase tracking-wider">Đang chờ xử lý</div>
+                    <div class="text-2xl font-bold text-amber-700 mt-1" id="statPendingTasks">0</div>
+                    <div class="text-xs text-amber-600/70 mt-0.5">Cần làm đúng giờ</div>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600">
+                    <i data-lucide="hourglass" class="w-5 h-5"></i>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <div class="text-xs font-medium text-emerald-600 uppercase tracking-wider">Đã hoàn thành</div>
+                    <div class="text-2xl font-bold text-emerald-700 mt-1" id="statCompletedTasks">0</div>
+                    <div class="text-xs text-emerald-600/70 mt-0.5" id="statCompletionRate">0% tiến độ</div>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+                    <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <div class="text-xs font-medium text-slate-500 uppercase tracking-wider">Nhân sự phụ trách</div>
+                    <div class="text-2xl font-bold text-slate-900 mt-1" id="statTotalEmployees">0</div>
+                    <div class="text-xs text-slate-400 mt-0.5">Nhận mail thông báo</div>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Bar Navigation -->
+        <div class="bg-white rounded-xl border border-slate-200 p-1.5 flex flex-wrap items-center justify-between gap-2 shadow-sm">
+            <div class="flex items-center gap-1 sm:gap-2">
+                <button onclick="switchTab('today')" id="tabBtn-today" class="tab-btn active px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition-all">
+                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                    <span>Lịch Hôm Nay (Sáng - Trưa - Chiều)</span>
+                </button>
+                <button onclick="switchTab('all')" id="tabBtn-all" class="tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1.5 transition-all">
+                    <i data-lucide="layers" class="w-4 h-4"></i>
+                    <span>Tất Cả Công Việc</span>
+                </button>
+                <button onclick="switchTab('team')" id="tabBtn-team" class="tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1.5 transition-all">
+                    <i data-lucide="user-check" class="w-4 h-4"></i>
+                    <span>Đội Ngũ Nhân Sự</span>
+                </button>
+                <button onclick="switchTab('settings')" id="tabBtn-settings" class="tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1.5 transition-all">
+                    <i data-lucide="settings" class="w-4 h-4"></i>
+                    <span>Cấu Hình Gmail & Tự Động Gửi</span>
+                </button>
+            </div>
+
+            <!-- Date Label -->
+            <div class="text-xs font-semibold text-slate-500 px-3 py-1 flex items-center gap-1.5">
+                <i data-lucide="calendar-days" class="w-3.5 h-3.5 text-blue-600"></i>
+                <span id="currentDateDisplay">Hôm nay</span>
+            </div>
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- TAB 1: LỊCH HÔM NAY (SÁNG - TRƯA - CHIỀU)               -->
+        <!-- ======================================================== -->
+        <div id="tabContent-today" class="tab-pane space-y-6">
+
+            <!-- Banner: Preset Generator Callout -->
+            <div class="bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-teal-500/10 border border-blue-200/80 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-11 h-11 rounded-xl bg-white border border-blue-200 flex items-center justify-center text-blue-600 shadow-sm shrink-0">
+                        <i data-lucide="calendar-clock" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-2">
+                            <span>Quy trình 1 ngày: Đăng 3 bài (Sáng - Trưa - Chiều)</span>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Khuyên Dùng</span>
+                        </h3>
+                        <p class="text-xs text-slate-600 mt-0.5">
+                            Tự động nhắc việc qua Gmail: <strong>Ca Sáng (09:00)</strong> • <strong>Ca Trưa (12:00)</strong> • <strong>Ca Chiều (16:30)</strong>.
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 w-full md:w-auto">
+                    <button onclick="generatePresetSocialTasks()" class="w-full md:w-auto px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm shadow-md shadow-blue-600/20 flex items-center justify-center gap-2 transition-all shrink-0">
+                        <i data-lucide="zap" class="w-4 h-4"></i>
+                        <span>Tạo Nhanh Lịch 3 Ca</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3 Shifts Columns Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+
+                <!-- CA SÁNG -->
+                <div class="bg-white rounded-2xl border border-amber-200 shadow-sm overflow-hidden flex flex-col">
+                    <div class="bg-gradient-to-r from-amber-500 to-amber-600 p-4 text-white flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <span class="text-xl">🌅</span>
+                            <div>
+                                <h4 class="font-bold text-sm tracking-wide">CA SÁNG</h4>
+                                <span class="text-[11px] text-amber-100 font-medium">Khung giờ: 08:00 - 11:30</span>
+                            </div>
+                        </div>
+                        <span id="morningCountBadge" class="text-xs font-bold px-2 py-0.5 rounded-full bg-white/20 text-white border border-white/25">0 việc</span>
+                    </div>
+                    <div id="morningTasksList" class="p-3.5 space-y-3 flex-1 min-h-[160px] bg-slate-50/50">
+                        <!-- Loaded dynamically -->
+                    </div>
+                    <div class="p-3 bg-white border-t border-slate-100">
+                        <button onclick="openTaskModalWithSlot('morning', '09:00')" class="w-full py-2 rounded-lg border border-dashed border-amber-300 hover:bg-amber-50/50 text-amber-700 font-semibold text-xs flex items-center justify-center gap-1.5 transition-all">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                            <span>Thêm việc Ca Sáng</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- CA TRƯA -->
+                <div class="bg-white rounded-2xl border border-orange-200 shadow-sm overflow-hidden flex flex-col">
+                    <div class="bg-gradient-to-r from-orange-500 to-orange-600 p-4 text-white flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <span class="text-xl">☀️</span>
+                            <div>
+                                <h4 class="font-bold text-sm tracking-wide">CA TRƯA</h4>
+                                <span class="text-[11px] text-orange-100 font-medium">Khung giờ: 11:30 - 14:00</span>
+                            </div>
+                        </div>
+                        <span id="noonCountBadge" class="text-xs font-bold px-2 py-0.5 rounded-full bg-white/20 text-white border border-white/25">0 việc</span>
+                    </div>
+                    <div id="noonTasksList" class="p-3.5 space-y-3 flex-1 min-h-[160px] bg-slate-50/50">
+                        <!-- Loaded dynamically -->
+                    </div>
+                    <div class="p-3 bg-white border-t border-slate-100">
+                        <button onclick="openTaskModalWithSlot('noon', '12:00')" class="w-full py-2 rounded-lg border border-dashed border-orange-300 hover:bg-orange-50/50 text-orange-700 font-semibold text-xs flex items-center justify-center gap-1.5 transition-all">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                            <span>Thêm việc Ca Trưa</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- CA CHIỀU -->
+                <div class="bg-white rounded-2xl border border-indigo-200 shadow-sm overflow-hidden flex flex-col">
+                    <div class="bg-gradient-to-r from-indigo-600 to-blue-600 p-4 text-white flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <span class="text-xl">🌇</span>
+                            <div>
+                                <h4 class="font-bold text-sm tracking-wide">CA CHIỀU</h4>
+                                <span class="text-[11px] text-indigo-100 font-medium">Khung giờ: 14:00 - 18:00</span>
+                            </div>
+                        </div>
+                        <span id="afternoonCountBadge" class="text-xs font-bold px-2 py-0.5 rounded-full bg-white/20 text-white border border-white/25">0 việc</span>
+                    </div>
+                    <div id="afternoonTasksList" class="p-3.5 space-y-3 flex-1 min-h-[160px] bg-slate-50/50">
+                        <!-- Loaded dynamically -->
+                    </div>
+                    <div class="p-3 bg-white border-t border-slate-100">
+                        <button onclick="openTaskModalWithSlot('afternoon', '16:30')" class="w-full py-2 rounded-lg border border-dashed border-indigo-300 hover:bg-indigo-50/50 text-indigo-700 font-semibold text-xs flex items-center justify-center gap-1.5 transition-all">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                            <span>Thêm việc Ca Chiều</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- CA TỐI & NHIỆM VỤ KHÁC -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-5 py-3.5 bg-slate-100/80 border-b border-slate-200 flex items-center justify-between">
+                    <div class="flex items-center gap-2 font-bold text-slate-800 text-sm">
+                        <span class="text-base">🌙</span>
+                        <span>Ca Tối & Nhiệm Vụ Khác (Báo cáo, đo lường chỉ số...)</span>
+                    </div>
+                    <button onclick="openTaskModalWithSlot('evening', '18:00')" class="text-xs text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-1">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i> Thêm việc
+                    </button>
+                </div>
+                <div id="eveningTasksList" class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- TAB 2: TẤT CẢ CÔNG VIỆC (QUẢN LÝ & BỘ LỌC)               -->
+        <!-- ======================================================== -->
+        <div id="tabContent-all" class="tab-pane hidden space-y-4">
+            <!-- Filter Bar -->
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+                <div class="flex-1 relative">
+                    <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                    <input type="text" id="taskSearchInput" oninput="filterAllTasks()" placeholder="Tìm kiếm theo tiêu đề hoặc mô tả..." class="w-full pl-10 pr-4 py-2 text-xs sm:text-sm rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <select id="filterSlotSelect" onchange="filterAllTasks()" class="px-3 py-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-blue-500">
+                        <option value="">Tất cả Ca làm việc</option>
+                        <option value="morning">🌅 Ca Sáng</option>
+                        <option value="noon">☀️ Ca Trưa</option>
+                        <option value="afternoon">🌇 Ca Chiều</option>
+                        <option value="evening">🌙 Ca Tối</option>
+                    </select>
+                    <select id="filterStatusSelect" onchange="filterAllTasks()" class="px-3 py-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-blue-500">
+                        <option value="">Tất cả Trạng thái</option>
+                        <option value="pending">⏳ Đang chờ</option>
+                        <option value="completed">✅ Đã hoàn thành</option>
+                    </select>
+                    <select id="filterAssigneeSelect" onchange="filterAllTasks()" class="px-3 py-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-blue-500">
+                        <option value="">Tất cả Nhân sự</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Tasks Table -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                <th class="py-3 px-4 w-12 text-center">Xong</th>
+                                <th class="py-3 px-4">Công Việc</th>
+                                <th class="py-3 px-4">Ca & Giờ Nhắc</th>
+                                <th class="py-3 px-4">Người Thực Hiện</th>
+                                <th class="py-3 px-4">Ưu Tiên</th>
+                                <th class="py-3 px-4">Lặp Lại</th>
+                                <th class="py-3 px-4 text-right">Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allTasksTableBody" class="divide-y divide-slate-100 text-xs sm:text-sm">
+                            <!-- Injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="allTasksEmptyState" class="hidden p-12 text-center text-slate-400">
+                    <i data-lucide="clipboard-list" class="w-12 h-12 mx-auto mb-3 text-slate-300"></i>
+                    <p class="font-medium">Chưa có công việc nào phù hợp với bộ lọc</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- TAB 3: ĐỘI NGŨ NHÂN SỰ & PHÂN CÔNG                       -->
+        <!-- ======================================================== -->
+        <div id="tabContent-team" class="tab-pane hidden space-y-5">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="font-bold text-slate-900 text-base">Danh Sách Nhân Sự & Người Thực Hiện</h3>
+                    <p class="text-xs text-slate-500">Mỗi nhân sự sẽ nhận email thông báo tự động từ Gmail khi tới hạn công việc</p>
+                </div>
+                <button onclick="openEmployeeModal()" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs sm:text-sm shadow-md shadow-blue-500/20 flex items-center gap-1.5 transition-all">
+                    <i data-lucide="user-plus" class="w-4 h-4"></i>
+                    <span>Thêm Nhân Sự Mới</span>
+                </button>
+            </div>
+
+            <!-- Employee Cards Grid -->
+            <div id="employeeGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Injected by JS -->
+            </div>
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- TAB 4: CẤU HÌNH GMAIL, GOOGLE SHEET & TỰ ĐỘNG GỬI         -->
+        <!-- ======================================================== -->
+        <div id="tabContent-settings" class="tab-pane hidden space-y-6">
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                <!-- Column 1: Config Form (7 cols) -->
+                <div class="lg:col-span-7 space-y-6">
+                    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                        <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+                                    <i data-lucide="mail" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-slate-900 text-base">Cấu Hình Gmail & Tự Động Gửi Online</h3>
+                                    <p class="text-xs text-slate-500">Hỗ trợ gửi trực tiếp qua Google Apps Script Webhook (Miễn phí 100%)</p>
+                                </div>
+                            </div>
+                            <span id="webhookStatusBadge" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                Sẵn Sàng
+                            </span>
+                        </div>
+
+                        <form id="settingsForm" onsubmit="saveSettings(event)" class="space-y-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Mail Gửi Thông Báo</label>
+                                    <input type="email" id="setting_smtp_email" value="tttai.mitsubishi.bth@gmail.com" required class="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Mail Nhận Thông Báo Chính</label>
+                                    <input type="email" id="setting_primary_recipient" value="taitran.1493@gmail.com" required class="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                    Google Apps Script Webhook URL (Để tự động gửi mail trực tiếp từ Google)
+                                </label>
+                                <input type="text" id="setting_apps_script_url" placeholder="https://script.google.com/macros/s/AKfycb.../exec (Tùy chọn - Xem hướng dẫn bên phải)" class="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono text-xs">
+                                <p class="text-[11px] text-slate-500 mt-1">
+                                    * Khi có Webhook URL, hệ thống sẽ tự động kích hoạt gửi mail thật 100% từ tài khoản <strong>tttai.mitsubishi.bth@gmail.com</strong> và tự ghi log vào sheet <strong>BaoCao</strong>!
+                                </p>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Link Google Sheets</label>
+                                <input type="text" id="setting_google_sheet_url" value="https://docs.google.com/spreadsheets/d/1UvZKWzGpycOIjFHcjrHonQoCuFOWIpqfE0Jdj4eeXbA/edit?usp=sharing" class="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono text-xs">
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Tên Người Gửi Hiển Thị</label>
+                                    <input type="text" id="setting_sender_name" value="Mitsubishi BTH - Nhắc Việc Tự Động" class="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Âm Thanh Báo Giờ Nhắc</label>
+                                    <select id="setting_sound_enabled" class="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-blue-500">
+                                        <option value="1">Bật âm thanh chuông báo</option>
+                                        <option value="0">Tắt âm thanh</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="pt-4 border-t border-slate-100 flex flex-wrap items-center gap-3">
+                                <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm shadow-md shadow-blue-500/20 transition-all">
+                                    Lưu Cài Đặt
+                                </button>
+                                <button type="button" onclick="testSendEmail()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs sm:text-sm transition-all flex items-center gap-1.5">
+                                    <i data-lucide="send" class="w-4 h-4 text-blue-600"></i>
+                                    <span>Gửi Thử Email Test</span>
+                                </button>
+                                <button type="button" onclick="openDirectGmailCompose()" class="px-4 py-2.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 font-semibold text-xs sm:text-sm transition-all flex items-center gap-1.5">
+                                    <i data-lucide="mail" class="w-4 h-4 text-red-600"></i>
+                                    <span>Mở Gmail Soạn Sẵn</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Column 2: Google Apps Script Webhook Guide (5 cols) -->
+                <div class="lg:col-span-5 space-y-4">
+                    <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-6 rounded-2xl shadow-md border border-slate-700 space-y-3">
+                        <div class="flex items-center gap-2 text-emerald-400 font-bold text-sm">
+                            <i data-lucide="zap" class="w-4 h-4"></i>
+                            <span>Tạo Webhook Gửi Mail Tự Động Trong 2 Phút</span>
+                        </div>
+                        <p class="text-xs text-slate-300">
+                            Để hệ thống trên GitHub Pages gửi email tự động 100% từ tài khoản <strong>tttai.mitsubishi.bth@gmail.com</strong> hoàn toàn miễn phí:
+                        </p>
+                        <ol class="space-y-2.5 text-xs text-slate-300">
+                            <li class="flex items-start gap-2">
+                                <span class="w-5 h-5 rounded-full bg-slate-700 text-emerald-300 font-bold flex items-center justify-center shrink-0 text-[11px]">1</span>
+                                <span>Mở Google Sheet của bạn &gt; chọn <strong>Tiện ích mở rộng (Extensions)</strong> &gt; <strong>Apps Script</strong>.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="w-5 h-5 rounded-full bg-slate-700 text-emerald-300 font-bold flex items-center justify-center shrink-0 text-[11px]">2</span>
+                                <span>Xóa code cũ, dán đoạn mã bên dưới và bấm nút <strong>Lưu (Save)</strong>.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="w-5 h-5 rounded-full bg-slate-700 text-emerald-300 font-bold flex items-center justify-center shrink-0 text-[11px]">3</span>
+                                <span>Bấm <strong>Triển khai (Deploy)</strong> &gt; <strong>Triển khai mới (New deployment)</strong> &gt; chọn loại <strong>Ứng dụng web (Web app)</strong>.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="w-5 h-5 rounded-full bg-slate-700 text-emerald-300 font-bold flex items-center justify-center shrink-0 text-[11px]">4</span>
+                                <span>Mục <em>Ai có quyền truy cập (Who has access)</em> chọn <strong>Bất kỳ ai (Anyone)</strong> rồi bấm Triển khai và copy link dán vào ô bên trái!</span>
+                            </li>
+                        </ol>
+
+                        <div class="pt-2">
+                            <button onclick="copyAppsScriptCode()" class="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm">
+                                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                                <span id="btnCopyScriptLabel">Sao Chép Mã Apps Script (1-Click)</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Audit Logs Section -->
+            <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div class="flex items-center gap-2.5">
+                        <i data-lucide="history" class="w-5 h-5 text-slate-600"></i>
+                        <h3 class="font-bold text-slate-900 text-base">Nhật Ký Thông Báo (BaoCao)</h3>
+                    </div>
+                    <button onclick="clearLogs()" class="text-xs text-red-600 hover:text-red-700 font-semibold flex items-center gap-1">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        <span>Xóa nhật ký</span>
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-bold text-[10px]">
+                                <th class="py-2.5 px-3">Thời gian</th>
+                                <th class="py-2.5 px-3">Công việc</th>
+                                <th class="py-2.5 px-3">Người nhận</th>
+                                <th class="py-2.5 px-3">Mail Nhận</th>
+                                <th class="py-2.5 px-3">Trạng thái</th>
+                                <th class="py-2.5 px-3">Thông điệp</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logsTableBody" class="divide-y divide-slate-100">
+                            <!-- Injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="logsEmptyState" class="hidden p-8 text-center text-slate-400 text-xs">
+                    Chưa có nhật ký gửi email nào được ghi nhận.
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-auto border-t border-slate-200 bg-white py-4 text-center text-xs text-slate-500">
+        <p>Mitsubishi BTH TaskHub • Phiên bản chạy trực tiếp trên GitHub Pages • Đồng bộ Google Sheets</p>
+    </footer>
+
+    <!-- ======================================================== -->
+    <!-- MODAL: XEM & COPY MẪU CỘT GOOGLE SHEETS                   -->
+    <!-- ======================================================== -->
+    <div id="sheetTemplateModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
+            <div class="px-6 py-4 bg-emerald-50 border-b border-emerald-100 flex items-center justify-between">
+                <div class="flex items-center gap-2 text-emerald-900 font-bold text-base">
+                    <i data-lucide="table" class="w-5 h-5 text-emerald-600"></i>
+                    <span>Cấu Trúc Cột Chuẩn Cho 3 Sheet Trong Google Sheets</span>
+                </div>
+                <button onclick="closeSheetTemplateModal()" class="w-8 h-8 rounded-lg hover:bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <p class="text-xs text-slate-600">
+                    Bấm nút <strong>"Sao Chép Bảng"</strong> bên dưới rồi mở Google Sheet, chọn ô <strong>A1</strong> và nhấn <strong>Ctrl + V</strong> để dán toàn bộ dữ liệu mẫu vào:
+                </p>
+
+                <!-- Sheet Tabs Selector -->
+                <div class="flex border-b border-slate-200 gap-2">
+                    <button onclick="switchTemplateTab('tasks')" id="tmplTab-tasks" class="px-4 py-2 text-xs font-bold border-b-2 border-emerald-600 text-emerald-700">
+                        1. Danh Sach Cong Viec
+                    </button>
+                    <button onclick="switchTemplateTab('employees')" id="tmplTab-employees" class="px-4 py-2 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800">
+                        2. NhanSu
+                    </button>
+                    <button onclick="switchTemplateTab('reports')" id="tmplTab-reports" class="px-4 py-2 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800">
+                        3. BaoCao
+                    </button>
+                </div>
+
+                <!-- Template Preview Box -->
+                <div class="relative">
+                    <textarea id="templateContentBox" readonly rows="7" class="w-full p-3 font-mono text-[11px] bg-slate-900 text-emerald-400 rounded-xl focus:outline-none"></textarea>
+                    <button onclick="copyTemplateToClipboard()" class="absolute top-2 right-2 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow flex items-center gap-1.5 transition-all">
+                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                        <span id="btnCopyLabel">Sao Chép Bảng</span>
+                    </button>
+                </div>
+
+                <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 flex items-start gap-2">
+                    <i data-lucide="info" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
+                    <div>
+                        <strong>Mẹo:</strong> Sau khi dán dữ liệu mẫu hoặc chỉnh sửa công việc trên Google Sheet, bạn chỉ cần bấm nút <strong>"Đồng Bộ Ngay"</strong> để hệ thống cập nhật tức thì!
+                    </div>
+                </div>
+
+                <div class="pt-2 flex items-center justify-end">
+                    <button type="button" onclick="closeSheetTemplateModal()" class="px-5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold">
+                        Đóng
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- MODAL: THÊM / SỬA CÔNG VIỆC                               -->
+    <!-- ======================================================== -->
+    <div id="taskModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
+            <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                <h3 id="taskModalTitle" class="font-bold text-slate-900 text-base">Thêm Công Việc Mới</h3>
+                <button onclick="closeTaskModal()" class="w-8 h-8 rounded-lg hover:bg-slate-200 text-slate-500 flex items-center justify-center">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form id="taskForm" onsubmit="saveTask(event)" class="p-6 space-y-4">
+                <input type="hidden" id="taskForm_id">
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tiêu Đề Công Việc *</label>
+                    <input type="text" id="taskForm_title" placeholder="VD: Đăng bài Fanpage ca Sáng (Tips & Kiến thức)" required class="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Mô Tả Chi Tiết / Hướng Dẫn</label>
+                    <textarea id="taskForm_description" rows="2" placeholder="Ghi chú nội dung, hashtag, tài nguyên thiết kế cần dùng..." class="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Ca Làm Việc</label>
+                        <select id="taskForm_slot" onchange="syncSlotDefaultTime()" class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-blue-500">
+                            <option value="morning">🌅 Ca Sáng (08:00 - 11:30)</option>
+                            <option value="noon">☀️ Ca Trưa (11:30 - 14:00)</option>
+                            <option value="afternoon">🌇 Ca Chiều (14:00 - 18:00)</option>
+                            <option value="evening">🌙 Ca Tối (18:00 - 22:00)</option>
+                            <option value="custom">⏱️ Giờ Riêng Tùy Chọn</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Giờ Nhắc (HH:MM) *</label>
+                        <input type="time" id="taskForm_scheduled_time" required class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Người Thực Hiện</label>
+                        <select id="taskForm_assignee_id" class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-blue-500">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Mức Độ Ưu Tiên</label>
+                        <select id="taskForm_priority" class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-blue-500">
+                            <option value="medium">Bình thường</option>
+                            <option value="high">Ưu tiên cao</option>
+                            <option value="urgent">Khẩn cấp ⚡</option>
+                            <option value="low">Thấp</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="taskForm_is_recurring" checked class="rounded text-blue-600 focus:ring-blue-500 w-4 h-4">
+                        <span class="text-xs font-semibold text-slate-700">Lặp lại nhắc việc mỗi ngày (Hàng ngày đến giờ sẽ nhắc)</span>
+                    </label>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
+                    <button type="button" onclick="closeTaskModal()" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-xs sm:text-sm font-semibold">
+                        Hủy
+                    </button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold shadow-md shadow-blue-500/20">
+                        Lưu Công Việc
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- MODAL: THÊM / SỬA NHÂN VIÊN                               -->
+    <!-- ======================================================== -->
+    <div id="employeeModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
+            <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                <h3 id="employeeModalTitle" class="font-bold text-slate-900 text-base">Thêm Nhân Sự Mới</h3>
+                <button onclick="closeEmployeeModal()" class="w-8 h-8 rounded-lg hover:bg-slate-200 text-slate-500 flex items-center justify-center">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form id="employeeForm" onsubmit="saveEmployee(event)" class="p-6 space-y-4">
+                <input type="hidden" id="empForm_id">
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Họ Và Tên *</label>
+                    <input type="text" id="empForm_name" placeholder="VD: Tài Trần" required class="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Email Gmail Nhận Thông Báo *</label>
+                    <input type="email" id="empForm_email" placeholder="VD: taitran.1493@gmail.com" required class="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                    <p class="text-[11px] text-slate-500 mt-1">Hòm thư nhận các thông báo ca làm việc trong ngày.</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Chức Vụ / Vai Trò</label>
+                        <input type="text" id="empForm_role" placeholder="VD: Quản lý / Content" class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Phòng Ban</label>
+                        <input type="text" id="empForm_department" placeholder="VD: Mitsubishi BTH" class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Màu Đại Diện</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" id="empForm_color" value="#2563EB" class="w-9 h-9 rounded-lg border border-slate-200 cursor-pointer">
+                        <span class="text-xs text-slate-500">Màu hiển thị trên thẻ và huy hiệu công việc</span>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
+                    <button type="button" onclick="closeEmployeeModal()" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-xs sm:text-sm font-semibold">
+                        Hủy
+                    </button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold shadow-md shadow-blue-500/20">
+                        Lưu Nhân Sự
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
+
+    <!-- ======================================================== -->
+    <!-- CLIENT-SIDE APPLICATION JAVASCRIPT                       -->
+    <!-- ======================================================== -->
+    <script>
+        // Storage keys
+        const STORAGE_KEY = 'mitsu_task_hub_data_v1';
+
+        // Default initial data
+        const DEFAULT_DATA = {
+            settings: {
+                smtp_email: 'tttai.mitsubishi.bth@gmail.com',
+                primary_recipient: 'taitran.1493@gmail.com',
+                sender_name: 'Mitsubishi BTH - Nhắc Việc Tự Động',
+                google_sheet_url: 'https://docs.google.com/spreadsheets/d/1UvZKWzGpycOIjFHcjrHonQoCuFOWIpqfE0Jdj4eeXbA/edit?usp=sharing',
+                google_sheet_id: '1UvZKWzGpycOIjFHcjrHonQoCuFOWIpqfE0Jdj4eeXbA',
+                apps_script_url: '',
+                sound_enabled: '1'
+            },
+            employees: [
+                { id: 1, name: 'Tài Trần', email: 'taitran.1493@gmail.com', role: 'Quản lý & Tiếp nhận chính', department: 'Mitsubishi BTH', color: '#2563EB', task_count: 3 },
+                { id: 2, name: 'Trần Thị Mai', email: 'mai.social@gmail.com', role: 'Chuyên viên Content Social', department: 'Marketing', color: '#EC4899', task_count: 0 },
+                { id: 3, name: 'Nguyễn Văn An', email: 'an.contentlead@gmail.com', role: 'Content Leader', department: 'Marketing', color: '#3B82F6', task_count: 0 }
+            ],
+            tasks: [
+                {
+                    id: 1,
+                    title: 'Đăng bài Fanpage ca Sáng: Điểm tin & Kiến thức ngành',
+                    description: 'Soạn nội dung chào ngày mới, chia sẻ tips lái xe an toàn cho khách hàng. Hình ảnh 1200x628 chuẩn.',
+                    slot: 'morning',
+                    scheduled_time: '09:00',
+                    priority: 'high',
+                    status: 'pending',
+                    is_recurring: true,
+                    assignee_id: 1,
+                    last_reminded_date: null
+                },
+                {
+                    id: 2,
+                    title: 'Đăng bài Fanpage ca Trưa: Tương tác / Minigame / Q&A',
+                    description: 'Khung giờ vàng nghỉ trưa, đăng câu đố ngắn hoặc hỏi đáp kích thích bình luận, chốt tương tác trước 13h.',
+                    slot: 'noon',
+                    scheduled_time: '12:00',
+                    priority: 'medium',
+                    status: 'pending',
+                    is_recurring: true,
+                    assignee_id: 1,
+                    last_reminded_date: null
+                },
+                {
+                    id: 3,
+                    title: 'Đăng bài Fanpage ca Chiều: Dòng xe & Ưu đãi bảo dưỡng',
+                    description: 'Giới thiệu tính năng dòng xe Mitsubishi và chương trình ưu đãi phụ tùng/bảo dưỡng trong ngày.',
+                    slot: 'afternoon',
+                    scheduled_time: '16:30',
+                    priority: 'urgent',
+                    status: 'pending',
+                    is_recurring: true,
+                    assignee_id: 1,
+                    last_reminded_date: null
+                },
+                {
+                    id: 4,
+                    title: 'Tổng hợp báo cáo tương tác & lead trong ngày',
+                    description: 'Kiểm tra chỉ số Reach, Engagement, Comment, Lead của 3 ca đăng trong ngày và báo cáo vào nhóm.',
+                    slot: 'evening',
+                    scheduled_time: '18:00',
+                    priority: 'medium',
+                    status: 'pending',
+                    is_recurring: true,
+                    assignee_id: 1,
+                    last_reminded_date: null
+                }
+            ],
+            logs: []
+        };
+
+        // App state
+        let appState = loadState();
+        let currentTemplateTab = 'tasks';
+
+        function loadState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    return {
+                        settings: { ...DEFAULT_DATA.settings, ...(parsed.settings || {}) },
+                        employees: parsed.employees || DEFAULT_DATA.employees,
+                        tasks: parsed.tasks || DEFAULT_DATA.tasks,
+                        logs: parsed.logs || []
+                    };
+                }
+            } catch (e) {
+                console.error(e);
+            }
+            return JSON.parse(JSON.stringify(DEFAULT_DATA));
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            } catch (e) {
+                console.error('Save state failed:', e);
+            }
+        }
+
+        // -------------------------------------------------------------
+        // INIT & CLOCK & TIMER SCHEDULER
+        // -------------------------------------------------------------
+        document.addEventListener('DOMContentLoaded', () => {
+            initClock();
+            renderAll();
+
+            // Run in-browser scheduler every 30 seconds
+            setInterval(checkTaskReminders, 30000);
+
+            // Auto check notification permission status
+            updateNotificationBtnStatus();
+        });
+
+        function initClock() {
+            const updateTime = () => {
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString('vi-VN', { hour12: false });
+                const dateStr = now.toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric' });
+                
+                const clockEl = document.getElementById('liveClock');
+                if (clockEl) clockEl.textContent = timeStr;
+                
+                const dateEl = document.getElementById('currentDateDisplay');
+                if (dateEl) dateEl.textContent = dateStr;
+            };
+            updateTime();
+            setInterval(updateTime, 1000);
+        }
+
+        function renderAll() {
+            renderSummary();
+            renderBadges();
+            renderTodaySlots();
+            renderAllTasksTable();
+            renderEmployees();
+            renderSettingsForm();
+            renderLogsTable();
+            populateEmployeeDropdowns();
+            lucide.createIcons();
+        }
+
+        function renderSummary() {
+            const tasks = appState.tasks;
+            const total = tasks.length;
+            const completed = tasks.filter(t => t.status === 'completed').length;
+            const pending = total - completed;
+            const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+            document.getElementById('statTotalTasks').textContent = total;
+            document.getElementById('statPendingTasks').textContent = pending;
+            document.getElementById('statCompletedTasks').textContent = completed;
+            document.getElementById('statCompletionRate').textContent = `${rate}% tiến độ`;
+            document.getElementById('statTotalEmployees').textContent = appState.employees.length;
+        }
+
+        function renderBadges() {
+            const s = appState.settings;
+            document.getElementById('badgeSenderEmail').textContent = s.smtp_email;
+            document.getElementById('badgeReceiverEmail').textContent = s.primary_recipient;
+            document.getElementById('displaySheetId').textContent = s.google_sheet_id;
+            document.getElementById('btnOpenSheetLink').href = s.google_sheet_url;
+
+            const badge = document.getElementById('webhookStatusBadge');
+            if (s.apps_script_url) {
+                badge.className = 'text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200';
+                badge.textContent = 'Webhook Đã Bật (Gửi Tự Động)';
+            } else {
+                badge.className = 'text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-200';
+                badge.textContent = 'Chế độ Trực Tiếp (Webmail / Thông Báo Màn Hình)';
+            }
+        }
+
+        // -------------------------------------------------------------
+        // GOOGLE SHEETS LIVE SYNC (CLIENT-SIDE GVIZ JSON API)
+        // -------------------------------------------------------------
+        async function fetchSheetDataViaGviz(sheetId, gid) {
+            return new Promise((resolve, reject) => {
+                const callbackName = 'gviz_callback_' + Math.floor(Math.random() * 1000000);
+                const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=responseHandler:${callbackName}&gid=${gid}&_=${Date.now()}`;
+                
+                const script = document.createElement('script');
+                script.src = url;
+
+                window[callbackName] = function(response) {
+                    delete window[callbackName];
+                    document.body.removeChild(script);
+                    if (response && response.status === 'ok') {
+                        resolve(response.table);
+                    } else {
+                        reject(new Error(response?.errors?.[0]?.message || 'Không thể đọc dữ liệu'));
+                    }
+                };
+
+                script.onerror = function() {
+                    delete window[callbackName];
+                    document.body.removeChild(script);
+                    reject(new Error('Lỗi kết nối tới Google Sheets'));
+                };
+
+                document.body.appendChild(script);
+            });
+        }
+
+        async function syncFromGoogleSheets() {
+            showToast('Đang kết nối tới Google Sheet...', 'info');
+            const sheetId = appState.settings.google_sheet_id || '1UvZKWzGpycOIjFHcjrHonQoCuFOWIpqfE0Jdj4eeXbA';
+
+            try {
+                // 1. Sync Employees (gid: 1121546996)
+                let empUpdated = 0;
+                let empAdded = 0;
+                try {
+                    const empTable = await fetchSheetDataViaGviz(sheetId, '1121546996');
+                    if (empTable && empTable.rows && empTable.rows.length > 0) {
+                        empTable.rows.forEach(r => {
+                            const c = r.c || [];
+                            const name = c[0]?.v ? String(c[0].v).trim() : '';
+                            const email = c[1]?.v ? String(c[1].v).trim() : '';
+                            const role = c[2]?.v ? String(c[2].v).trim() : 'Nhân viên';
+                            const dept = c[3]?.v ? String(c[3].v).trim() : 'Mitsubishi BTH';
+
+                            if (email) {
+                                const exist = appState.employees.find(e => e.email.toLowerCase() === email.toLowerCase());
+                                if (exist) {
+                                    exist.name = name || exist.name;
+                                    exist.role = role;
+                                    exist.department = dept;
+                                    empUpdated++;
+                                } else {
+                                    appState.employees.push({
+                                        id: Date.now() + Math.floor(Math.random() * 1000),
+                                        name: name || email,
+                                        email: email,
+                                        role: role,
+                                        department: dept,
+                                        color: '#2563EB',
+                                        task_count: 0
+                                    });
+                                    empAdded++;
+                                }
+                            }
+                        });
+                    }
+                } catch (err) {
+                    console.warn('Lỗi đọc sheet NhanSu:', err);
+                }
+
+                // 2. Sync Tasks (gid: 0)
+                let taskAdded = 0;
+                let taskUpdated = 0;
+                let sheetIsEmpty = false;
+
+                try {
+                    const taskTable = await fetchSheetDataViaGviz(sheetId, '0');
+                    if (taskTable && taskTable.rows && taskTable.rows.length > 0) {
+                        taskTable.rows.forEach(r => {
+                            const c = r.c || [];
+                            const title = c[0]?.v ? String(c[0].v).trim() : '';
+                            const desc = c[1]?.v ? String(c[1].v).trim() : '';
+                            const rawSlot = c[2]?.v ? String(c[2].v).trim().toLowerCase() : '';
+                            const rawTime = c[3]?.v ? String(c[3].v).trim() : '';
+                            const rawAssignee = c[4]?.v ? String(c[4].v).trim() : '';
+                            const rawPriority = c[5]?.v ? String(c[5].v).trim().toLowerCase() : 'medium';
+                            const rawStatus = c[7]?.v ? String(c[7].v).trim().toLowerCase() : 'pending';
+
+                            if (title) {
+                                let slot = 'morning';
+                                if (rawSlot.includes('trưa') || rawSlot.includes('noon')) slot = 'noon';
+                                else if (rawSlot.includes('chiều') || rawSlot.includes('afternoon')) slot = 'afternoon';
+                                else if (rawSlot.includes('tối') || rawSlot.includes('evening')) slot = 'evening';
+
+                                let scheduled_time = rawTime || (slot === 'morning' ? '09:00' : (slot === 'noon' ? '12:00' : '16:30'));
+                                if (scheduled_time.length === 4 && scheduled_time.indexOf(':') === 1) {
+                                    scheduled_time = '0' + scheduled_time;
+                                }
+
+                                let priority = 'medium';
+                                if (rawPriority.includes('khẩn') || rawPriority.includes('urgent')) priority = 'urgent';
+                                else if (rawPriority.includes('cao') || rawPriority.includes('high')) priority = 'high';
+                                else if (rawPriority.includes('thấp') || rawPriority.includes('low')) priority = 'low';
+
+                                const status = (rawStatus.includes('xong') || rawStatus.includes('hoàn thành')) ? 'completed' : 'pending';
+
+                                // Find assignee
+                                let assigneeId = 1;
+                                if (rawAssignee) {
+                                    const found = appState.employees.find(e => e.email.toLowerCase() === rawAssignee.toLowerCase() || e.name.toLowerCase() === rawAssignee.toLowerCase());
+                                    if (found) assigneeId = found.id;
+                                }
+
+                                const existingTask = appState.tasks.find(t => t.title === title);
+                                if (existingTask) {
+                                    existingTask.description = desc;
+                                    existingTask.slot = slot;
+                                    existingTask.scheduled_time = scheduled_time;
+                                    existingTask.priority = priority;
+                                    existingTask.assignee_id = assigneeId;
+                                    existingTask.status = status;
+                                    taskUpdated++;
+                                } else {
+                                    appState.tasks.push({
+                                        id: Date.now() + Math.floor(Math.random() * 1000),
+                                        title: title,
+                                        description: desc,
+                                        slot: slot,
+                                        scheduled_time: scheduled_time,
+                                        priority: priority,
+                                        status: status,
+                                        is_recurring: true,
+                                        assignee_id: assigneeId,
+                                        last_reminded_date: null
+                                    });
+                                    taskAdded++;
+                                }
+                            }
+                        });
+                    } else {
+                        sheetIsEmpty = true;
+                    }
+                } catch (err) {
+                    console.warn('Lỗi đọc sheet Danh Sach Cong Viec:', err);
+                }
+
+                saveState();
+                renderAll();
+
+                if (sheetIsEmpty && taskAdded === 0 && taskUpdated === 0) {
+                    showToast('Đã kết nối! Sheet trên Google Drive hiện chưa có dòng dữ liệu nào. Hãy bấm "Xem Mẫu & Copy Dữ Liệu" để dán vào sheet!', 'warning');
+                } else {
+                    showToast(`Đồng bộ thành công! Công việc: +${taskAdded} mới, cập nhật ${taskUpdated}. Nhân sự: +${empAdded} mới, cập nhật ${empUpdated}.`, 'success');
+                }
+            } catch (e) {
+                showToast('Lỗi khi đồng bộ Google Sheet: ' + e.message, 'error');
+            }
+        }
+
+        // -------------------------------------------------------------
+        // IN-BROWSER AUDIO CHIME & DESKTOP NOTIFICATIONS
+        // -------------------------------------------------------------
+        function playChimeSound() {
+            if (appState.settings.sound_enabled !== '1') return;
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const now = ctx.currentTime;
+                
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                
+                osc.frequency.setValueAtTime(587.33, now); // D5
+                osc.frequency.setValueAtTime(880, now + 0.1); // A5
+                osc.frequency.setValueAtTime(1174.66, now + 0.25); // D6
+
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.8);
+            } catch (e) {
+                console.warn('Audio not supported:', e);
+            }
+        }
+
+        function requestNotificationPermission() {
+            if (!("Notification" in window)) {
+                alert("Trình duyệt của bạn không hỗ trợ Thông báo màn hình.");
+                return;
+            }
+            Notification.requestPermission().then(permission => {
+                updateNotificationBtnStatus();
+                if (permission === 'granted') {
+                    showToast('Đã bật thông báo đẩy màn hình!', 'success');
+                    playChimeSound();
+                    new Notification("Mitsubishi BTH TaskHub", {
+                        body: "Hệ thống sẵn sàng gửi chuông và thông báo nhắc việc đúng giờ!",
+                        icon: "https://cdn-icons-png.flaticon.com/512/3602/3602145.png"
+                    });
+                }
+            });
+        }
+
+        function updateNotificationBtnStatus() {
+            const btn = document.getElementById('btnNotificationText');
+            if (!btn || !("Notification" in window)) return;
+            if (Notification.permission === 'granted') {
+                btn.textContent = 'Chuông Báo: Bật';
+            } else {
+                btn.textContent = 'Bật Chuông Nhắc';
+            }
+        }
+
+        function checkTaskReminders() {
+            const now = new Date();
+            const todayStr = now.toISOString().split('T')[0];
+            const currentHours = String(now.getHours()).padStart(2, '0');
+            const currentMinutes = String(now.getMinutes()).padStart(2, '0');
+            const currentTimeStr = `${currentHours}:${currentMinutes}`;
+
+            appState.tasks.forEach(task => {
+                if (task.status === 'completed') return;
+                if (task.last_reminded_date === todayStr) return;
+
+                if (currentTimeStr >= task.scheduled_time) {
+                    triggerTaskAlert(task, todayStr);
+                }
+            });
+        }
+
+        function triggerTaskAlert(task, todayStr) {
+            task.last_reminded_date = todayStr;
+            saveState();
+
+            playChimeSound();
+
+            const assignee = appState.employees.find(e => e.id === task.assignee_id) || appState.employees[0];
+            const recipientEmail = assignee ? assignee.email : appState.settings.primary_recipient;
+
+            // 1. Browser Notification
+            if ("Notification" in window && Notification.permission === 'granted') {
+                new Notification(`⏰ [ĐẾN GIỜ NHẮC VIỆC] ${task.title}`, {
+                    body: `Khung giờ: ${task.scheduled_time} • Người thực hiện: ${assignee.name} (${recipientEmail})`,
+                    icon: "https://cdn-icons-png.flaticon.com/512/3602/3602145.png"
+                });
+            }
+
+            // 2. Dispatch via Webhook if configured
+            if (appState.settings.apps_script_url) {
+                dispatchEmailViaAppsScript(task, assignee, recipientEmail);
+            } else {
+                addLogEntry(task.title, assignee.name, recipientEmail, 'Đã nhắc', 'Đã phát chuông và thông báo màn hình.');
+            }
+
+            renderAll();
+        }
+
+        // -------------------------------------------------------------
+        // EMAIL DISPATCH VIA APPS SCRIPT WEBHOOK / WEBMAIL
+        // -------------------------------------------------------------
+        async function dispatchEmailViaAppsScript(task, assignee, recipientEmail) {
+            const webhookUrl = appState.settings.apps_script_url.trim();
+            if (!webhookUrl) return;
+
+            const payload = {
+                action: 'send_email',
+                to: recipientEmail,
+                subject: `🔔 [Nhắc việc] ${task.title} (${task.scheduled_time})`,
+                taskTitle: task.title,
+                recipientName: assignee.name,
+                bodyText: `Xin chào ${assignee.name},\nBạn có công việc cần thực hiện: ${task.title}\nKhung giờ: ${task.scheduled_time}\nGhi chú: ${task.description || 'Không có'}\n\nTrân trọng,\nMitsubishi BTH`,
+                htmlBody: `
+                <div style="font-family: Arial, sans-serif; max-width: 550px; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
+                    <div style="background: #2563eb; color: #fff; padding: 20px;">
+                        <h2 style="margin: 0;">🔔 NHẮC NHỞ CÔNG VIỆC</h2>
+                        <p style="margin: 5px 0 0 0; font-size: 13px;">Hệ thống thông báo phân công nhiệm vụ Mitsubishi BTH</p>
+                    </div>
+                    <div style="padding: 20px;">
+                        <p>Xin chào <strong>${assignee.name}</strong>,</p>
+                        <p>Bạn có công việc cần hoàn thành đúng hạn:</p>
+                        <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                            <h3 style="margin-top: 0; color: #0f172a;">${task.title}</h3>
+                            <p style="color: #475569; font-size: 13px;">${task.description || ''}</p>
+                            <p style="margin-bottom: 0;"><strong>⏰ Giờ thực hiện:</strong> ${task.scheduled_time}</p>
+                        </div>
+                    </div>
+                </div>`
+            };
+
+            try {
+                await fetch(webhookUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                addLogEntry(task.title, assignee.name, recipientEmail, 'Đã gửi', 'Đã chuyển lệnh gửi qua Google Apps Script.');
+            } catch (e) {
+                addLogEntry(task.title, assignee.name, recipientEmail, 'Thất bại', 'Lỗi kết nối Webhook: ' + e.message);
+            }
+        }
+
+        function openDirectGmailCompose(task = null) {
+            const recipient = appState.settings.primary_recipient || 'taitran.1493@gmail.com';
+            const title = task ? task.title : 'Đăng bài Fanpage Mitsubishi BTH trong ngày';
+            const time = task ? task.scheduled_time : 'Hôm nay';
+            const desc = task ? (task.description || '') : 'Nội dung nhắc việc 3 bài đăng Sáng - Trưa - Chiều';
+
+            const subject = encodeURIComponent(`🔔 [Nhắc Việc] ${title} (${time})`);
+            const body = encodeURIComponent(`Xin chào Tài Trần,\n\nNhắc nhở công việc cần hoàn thành:\n- Tiêu đề: ${title}\n- Khung giờ: ${time}\n- Mô tả: ${desc}\n\nTrân trọng,\nMitsubishi BTH`);
+
+            const url = `https://mail.google.com/mail/?view=cm&fs=1&to=${recipient}&su=${subject}&body=${body}`;
+            window.open(url, '_blank');
+        }
+
+        function testSendEmail() {
+            const task = appState.tasks[0] || { title: 'Kiểm tra thông báo nhắc việc', scheduled_time: 'Ngay bây giờ' };
+            const assignee = appState.employees[0];
+            const recipientEmail = appState.settings.primary_recipient;
+
+            if (appState.settings.apps_script_url) {
+                showToast('Đang gửi email test qua Webhook Google...', 'info');
+                dispatchEmailViaAppsScript(task, assignee, recipientEmail);
+                showToast(`Đã gửi lệnh nhắc việc tới ${recipientEmail}!`, 'success');
+            } else {
+                showToast('Chưa điền Webhook! Đang mở cửa sổ Gmail soạn sẵn cho bạn...', 'info');
+                openDirectGmailCompose(task);
+            }
+        }
+
+        function addLogEntry(taskTitle, recipientName, recipientEmail, status, message) {
+            const now = new Date();
+            const timeStr = now.toLocaleDateString('vi-VN') + ' ' + now.toLocaleTimeString('vi-VN', { hour12: false });
+            appState.logs.unshift({
+                sent_at: timeStr,
+                task_title: taskTitle,
+                recipient_name: recipientName,
+                recipient_email: recipientEmail,
+                status: status,
+                message: message
+            });
+            if (appState.logs.length > 50) appState.logs.pop();
+            saveState();
+            renderLogsTable();
+        }
+
+        // -------------------------------------------------------------
+        // TASK OPERATIONS & PRESET
+        // -------------------------------------------------------------
+        function toggleTaskStatus(taskId) {
+            const task = appState.tasks.find(t => t.id === taskId);
+            if (!task) return;
+            task.status = task.status === 'completed' ? 'pending' : 'completed';
+            saveState();
+            renderAll();
+        }
+
+        function sendReminderNow(taskId) {
+            const task = appState.tasks.find(t => t.id === taskId);
+            if (!task) return;
+            const assignee = appState.employees.find(e => e.id === task.assignee_id) || appState.employees[0];
+            const recipientEmail = assignee ? assignee.email : appState.settings.primary_recipient;
+
+            playChimeSound();
+
+            if (appState.settings.apps_script_url) {
+                dispatchEmailViaAppsScript(task, assignee, recipientEmail);
+                showToast(`Đã gửi email nhắc việc tới ${recipientEmail}!`, 'success');
+            } else {
+                openDirectGmailCompose(task);
+            }
+        }
+
+        function generatePresetSocialTasks() {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const presets = [
+                {
+                    id: Date.now() + 1,
+                    title: 'Đăng bài Fanpage 01 (Sáng): Chia sẻ giá trị / Chào ngày mới',
+                    description: 'Nội dung truyền cảm hứng, tin tức xu hướng ngành hoặc bí quyết hữu ích cho khách hàng lái xe an toàn.',
+                    slot: 'morning',
+                    scheduled_time: '09:00',
+                    priority: 'high',
+                    status: 'pending',
+                    is_recurring: true,
+                    assignee_id: 1,
+                    last_reminded_date: null
+                },
+                {
+                    id: Date.now() + 2,
+                    title: 'Đăng bài Fanpage 02 (Trưa): Tương tác khách hàng / Mini Poll / Q&A',
+                    description: 'Bài viết giải trí, minigame ngắn hoặc câu hỏi gợi mở thảo luận để kéo tương tác trong giờ nghỉ trưa.',
+                    slot: 'noon',
+                    scheduled_time: '12:00',
+                    priority: 'medium',
+                    status: 'pending',
+                    is_recurring: true,
+                    assignee_id: 1,
+                    last_reminded_date: null
+                },
+                {
+                    id: Date.now() + 3,
+                    title: 'Đăng bài Fanpage 03 (Chiều): Dòng xe & Ưu đãi bảo dưỡng Mitsubishi',
+                    description: 'Giới thiệu tính năng dòng xe, feedback khách hàng và chương trình khuyến mãi phụ tùng/bảo dưỡng trong ngày.',
+                    slot: 'afternoon',
+                    scheduled_time: '16:30',
+                    priority: 'urgent',
+                    status: 'pending',
+                    is_recurring: true,
+                    assignee_id: 1,
+                    last_reminded_date: null
+                }
+            ];
+
+            appState.tasks = [...appState.tasks, ...presets];
+            saveState();
+            renderAll();
+            showToast('Đã thêm thành công 3 bài đăng MXH (Sáng - Trưa - Chiều)!', 'success');
+            switchTab('today');
+        }
+
+        function saveTask(e) {
+            e.preventDefault();
+            const id = document.getElementById('taskForm_id').value;
+            const title = document.getElementById('taskForm_title').value.trim();
+            const desc = document.getElementById('taskForm_description').value.trim();
+            const slot = document.getElementById('taskForm_slot').value;
+            const time = document.getElementById('taskForm_scheduled_time').value;
+            const priority = document.getElementById('taskForm_priority').value;
+            const assigneeId = parseInt(document.getElementById('taskForm_assignee_id').value) || 1;
+            const isRecurring = document.getElementById('taskForm_is_recurring').checked;
+
+            if (id) {
+                const task = appState.tasks.find(t => t.id === parseInt(id));
+                if (task) {
+                    task.title = title;
+                    task.description = desc;
+                    task.slot = slot;
+                    task.scheduled_time = time;
+                    task.priority = priority;
+                    task.assignee_id = assigneeId;
+                    task.is_recurring = isRecurring;
+                    showToast('Đã cập nhật công việc!', 'success');
+                }
+            } else {
+                appState.tasks.push({
+                    id: Date.now(),
+                    title,
+                    description: desc,
+                    slot,
+                    scheduled_time: time,
+                    priority,
+                    status: 'pending',
+                    assignee_id: assigneeId,
+                    is_recurring: isRecurring,
+                    last_reminded_date: null
+                });
+                showToast('Đã tạo công việc mới!', 'success');
+            }
+
+            saveState();
+            closeTaskModal();
+            renderAll();
+        }
+
+        function deleteTask(taskId) {
+            if (!confirm('Bạn có chắc chắn muốn xóa công việc này?')) return;
+            appState.tasks = appState.tasks.filter(t => t.id !== taskId);
+            saveState();
+            renderAll();
+            showToast('Đã xóa công việc.', 'success');
+        }
+
+        function openTaskModal() {
+            document.getElementById('taskForm_id').value = '';
+            document.getElementById('taskForm_title').value = '';
+            document.getElementById('taskForm_description').value = '';
+            document.getElementById('taskForm_slot').value = 'morning';
+            document.getElementById('taskForm_scheduled_time').value = '09:00';
+            document.getElementById('taskForm_priority').value = 'medium';
+            document.getElementById('taskForm_is_recurring').checked = true;
+            document.getElementById('taskModalTitle').textContent = 'Thêm Công Việc Mới';
+            document.getElementById('taskModal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function openTaskModalWithSlot(slot, defaultTime) {
+            openTaskModal();
+            document.getElementById('taskForm_slot').value = slot;
+            document.getElementById('taskForm_scheduled_time').value = defaultTime;
+        }
+
+        function openEditTaskModal(taskId) {
+            const task = appState.tasks.find(t => t.id === taskId);
+            if (!task) return;
+
+            document.getElementById('taskForm_id').value = task.id;
+            document.getElementById('taskForm_title').value = task.title;
+            document.getElementById('taskForm_description').value = task.description || '';
+            document.getElementById('taskForm_slot').value = task.slot;
+            document.getElementById('taskForm_scheduled_time').value = task.scheduled_time;
+            document.getElementById('taskForm_priority').value = task.priority;
+            document.getElementById('taskForm_assignee_id').value = task.assignee_id;
+            document.getElementById('taskForm_is_recurring').checked = Boolean(task.is_recurring);
+            document.getElementById('taskModalTitle').textContent = 'Chỉnh Sửa Công Việc';
+            document.getElementById('taskModal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeTaskModal() {
+            document.getElementById('taskModal').classList.add('hidden');
+        }
+
+        function syncSlotDefaultTime() {
+            const slot = document.getElementById('taskForm_slot').value;
+            const timeInput = document.getElementById('taskForm_scheduled_time');
+            const defaults = { morning: '09:00', noon: '12:00', afternoon: '16:30', evening: '18:00', custom: '10:00' };
+            if (defaults[slot]) timeInput.value = defaults[slot];
+        }
+
+        // -------------------------------------------------------------
+        // RENDER VIEWS
+        // -------------------------------------------------------------
+        function renderTodaySlots() {
+            const morningTasks = appState.tasks.filter(t => t.slot === 'morning');
+            const noonTasks = appState.tasks.filter(t => t.slot === 'noon');
+            const afternoonTasks = appState.tasks.filter(t => t.slot === 'afternoon');
+            const eveningTasks = appState.tasks.filter(t => t.slot === 'evening' || t.slot === 'custom');
+
+            document.getElementById('morningCountBadge').textContent = `${morningTasks.length} việc`;
+            document.getElementById('noonCountBadge').textContent = `${noonTasks.length} việc`;
+            document.getElementById('afternoonCountBadge').textContent = `${afternoonTasks.length} việc`;
+
+            renderSlotColumn('morningTasksList', morningTasks);
+            renderSlotColumn('noonTasksList', noonTasks);
+            renderSlotColumn('afternoonTasksList', afternoonTasks);
+            renderEveningList('eveningTasksList', eveningTasks);
+        }
+
+        function renderSlotColumn(containerId, tasks) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            if (tasks.length === 0) {
+                container.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center text-center p-6 text-slate-400">
+                        <i data-lucide="calendar-plus" class="w-8 h-8 stroke-1 text-slate-300 mb-2"></i>
+                        <p class="text-xs">Chưa có việc trong ca này</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = tasks.map(task => createTaskCardHtml(task)).join('');
+        }
+
+        function renderEveningList(containerId, tasks) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            if (tasks.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-2 text-center py-6 text-slate-400 text-xs">
+                        Không có việc riêng hoặc ca tối nào hôm nay.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = tasks.map(task => createTaskCardHtml(task)).join('');
+        }
+
+        function createTaskCardHtml(task) {
+            const isCompleted = task.status === 'completed';
+            const priorityColors = {
+                urgent: 'bg-red-50 text-red-700 border-red-200',
+                high: 'bg-orange-50 text-orange-700 border-orange-200',
+                medium: 'bg-blue-50 text-blue-700 border-blue-200',
+                low: 'bg-slate-50 text-slate-600 border-slate-200'
+            };
+            const pBadgeClass = priorityColors[task.priority] || priorityColors.medium;
+            const pLabel = { urgent: 'Khẩn cấp', high: 'Ưu tiên cao', medium: 'Bình thường', low: 'Thấp' }[task.priority] || 'Bình thường';
+
+            const assignee = appState.employees.find(e => e.id === task.assignee_id) || appState.employees[0];
+            const empColor = assignee ? assignee.color : '#2563EB';
+            const empName = assignee ? assignee.name : 'Tài Trần';
+
+            return `
+                <div class="task-card bg-white rounded-xl border ${isCompleted ? 'border-emerald-200/90 bg-emerald-50/20' : 'border-slate-200'} p-3.5 shadow-sm space-y-2.5">
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="flex items-start gap-2.5 flex-1 min-w-0">
+                            <input type="checkbox" ${isCompleted ? 'checked' : ''} onchange="toggleTaskStatus(${task.id})" class="mt-0.5 rounded cursor-pointer w-4 h-4 text-blue-600 focus:ring-blue-500">
+                            <div class="flex-1 min-w-0">
+                                <h5 class="text-xs sm:text-sm font-bold text-slate-900 leading-snug ${isCompleted ? 'line-through text-slate-400' : ''}">
+                                    ${escapeHtml(task.title)}
+                                </h5>
+                                ${task.description ? `<p class="text-[11px] text-slate-500 mt-0.5 line-clamp-2 ${isCompleted ? 'line-through text-slate-400' : ''}">${escapeHtml(task.description)}</p>` : ''}
+                            </div>
+                        </div>
+
+                        <div class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-bold text-[11px] shrink-0 border border-slate-200/60 flex items-center gap-1">
+                            <i data-lucide="clock" class="w-3 h-3 text-slate-500"></i>
+                            <span>${task.scheduled_time}</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs gap-2">
+                        <div class="flex items-center gap-1.5 min-w-0">
+                            <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${empColor};"></span>
+                            <span class="text-[11px] font-semibold text-slate-700 truncate" title="${empName}">${empName}</span>
+                        </div>
+
+                        <div class="flex items-center gap-1 shrink-0">
+                            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded border ${pBadgeClass}">
+                                ${pLabel}
+                            </span>
+
+                            <button onclick="sendReminderNow(${task.id})" title="Gửi email nhắc nhở ngay lập tức" class="p-1 rounded-lg hover:bg-blue-50 text-blue-600 border border-blue-200 transition-all flex items-center justify-center">
+                                <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                            </button>
+
+                            <button onclick="openEditTaskModal(${task.id})" title="Chỉnh sửa" class="p-1 rounded-lg hover:bg-slate-100 text-slate-500 border border-slate-200 transition-all">
+                                <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                            </button>
+
+                            <button onclick="deleteTask(${task.id})" title="Xóa" class="p-1 rounded-lg hover:bg-red-50 text-red-500 border border-red-200 transition-all">
+                                <i data-lucide="trash" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderAllTasksTable() {
+            filterAllTasks();
+        }
+
+        function filterAllTasks() {
+            const search = (document.getElementById('taskSearchInput')?.value || '').toLowerCase().trim();
+            const slot = document.getElementById('filterSlotSelect')?.value || '';
+            const status = document.getElementById('filterStatusSelect')?.value || '';
+            const assignee = document.getElementById('filterAssigneeSelect')?.value || '';
+
+            const filtered = appState.tasks.filter(t => {
+                if (search && !t.title.toLowerCase().includes(search) && !(t.description && t.description.toLowerCase().includes(search))) {
+                    return false;
+                }
+                if (slot && t.slot !== slot) return false;
+                if (status && t.status !== status) return false;
+                if (assignee && String(t.assignee_id) !== String(assignee)) return false;
+                return true;
+            });
+
+            const tbody = document.getElementById('allTasksTableBody');
+            const empty = document.getElementById('allTasksEmptyState');
+            if (!tbody) return;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '';
+                if (empty) empty.classList.remove('hidden');
+                return;
+            }
+
+            if (empty) empty.classList.add('hidden');
+
+            const slotLabels = { morning: '🌅 Sáng', noon: '☀️ Trưa', afternoon: '🌇 Chiều', evening: '🌙 Tối', custom: '⏱️ Tự chọn' };
+            const priorityBadges = {
+                urgent: '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 border border-red-200">Khẩn cấp</span>',
+                high: '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-100 text-orange-700 border border-orange-200">Ưu tiên cao</span>',
+                medium: '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 border border-blue-200">Bình thường</span>',
+                low: '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">Thấp</span>'
+            };
+
+            tbody.innerHTML = filtered.map(t => {
+                const isDone = t.status === 'completed';
+                const assignee = appState.employees.find(e => e.id === t.assignee_id) || appState.employees[0];
+                const empName = assignee ? assignee.name : 'Tài Trần';
+                const empColor = assignee ? assignee.color : '#2563EB';
+
+                return `
+                    <tr class="hover:bg-slate-50/80 transition-colors ${isDone ? 'bg-slate-50/50' : ''}">
+                        <td class="py-3 px-4 text-center">
+                            <input type="checkbox" ${isDone ? 'checked' : ''} onchange="toggleTaskStatus(${t.id})" class="rounded w-4 h-4 text-blue-600 focus:ring-blue-500 cursor-pointer">
+                        </td>
+                        <td class="py-3 px-4">
+                            <div class="font-bold text-slate-900 ${isDone ? 'line-through text-slate-400' : ''}">
+                                ${escapeHtml(t.title)}
+                            </div>
+                            ${t.description ? `<div class="text-[11px] text-slate-500 mt-0.5 line-clamp-1 ${isDone ? 'line-through text-slate-400' : ''}">${escapeHtml(t.description)}</div>` : ''}
+                        </td>
+                        <td class="py-3 px-4 whitespace-nowrap">
+                            <span class="font-semibold text-slate-700 text-xs">${slotLabels[t.slot] || t.slot}</span>
+                            <span class="ml-1.5 px-2 py-0.5 rounded bg-slate-100 font-mono font-bold text-slate-700 text-[11px] border border-slate-200">${t.scheduled_time}</span>
+                        </td>
+                        <td class="py-3 px-4 whitespace-nowrap">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${empColor};"></span>
+                                <span class="font-medium text-slate-800 text-xs">${empName}</span>
+                            </div>
+                        </td>
+                        <td class="py-3 px-4 whitespace-nowrap">${priorityBadges[t.priority] || priorityBadges.medium}</td>
+                        <td class="py-3 px-4 whitespace-nowrap text-xs text-slate-600">
+                            ${t.is_recurring ? '<span class="text-blue-600 font-semibold flex items-center gap-1"><i data-lucide="repeat" class="w-3.5 h-3.5"></i> Hàng ngày</span>' : '<span class="text-slate-400">Một lần</span>'}
+                        </td>
+                        <td class="py-3 px-4 text-right whitespace-nowrap space-x-1">
+                            <button onclick="sendReminderNow(${t.id})" title="Gửi nhắc Gmail ngay" class="px-2 py-1 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium text-xs border border-blue-200 transition-all inline-flex items-center gap-1">
+                                <i data-lucide="send" class="w-3 h-3"></i> Nhắc Ngay
+                            </button>
+                            <button onclick="openEditTaskModal(${t.id})" title="Chỉnh sửa" class="p-1 rounded hover:bg-slate-100 text-slate-500 border border-slate-200 transition-all inline-block">
+                                <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <button onclick="deleteTask(${t.id})" title="Xóa" class="p-1 rounded hover:bg-red-50 text-red-500 border border-red-200 transition-all inline-block">
+                                <i data-lucide="trash" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        // -------------------------------------------------------------
+        // EMPLOYEES & SETTINGS
+        // -------------------------------------------------------------
+        function renderEmployees() {
+            const grid = document.getElementById('employeeGrid');
+            if (!grid) return;
+
+            grid.innerHTML = appState.employees.map(emp => {
+                const initial = emp.name.charAt(0).toUpperCase();
+                const isPrimary = emp.email === 'taitran.1493@gmail.com';
+
+                return `
+                    <div class="bg-white rounded-2xl border ${isPrimary ? 'border-blue-400 ring-2 ring-blue-100' : 'border-slate-200'} p-5 shadow-sm space-y-4 flex flex-col justify-between">
+                        <div class="space-y-3">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="w-11 h-11 rounded-xl flex items-center justify-center font-bold text-white text-base shadow-sm" style="background-color: ${emp.color || '#2563EB'};">
+                                    ${initial}
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    ${isPrimary ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Mail Chính</span>' : ''}
+                                    <button onclick="openEditEmployeeModal(${emp.id})" title="Sửa thông tin" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 border border-slate-200">
+                                        <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 class="font-bold text-slate-900 text-sm">${escapeHtml(emp.name)}</h4>
+                                <p class="text-xs text-blue-600 font-medium flex items-center gap-1 mt-0.5 truncate" title="${emp.email}">
+                                    <i data-lucide="mail" class="w-3 h-3 shrink-0"></i>
+                                    <span>${escapeHtml(emp.email)}</span>
+                                </p>
+                            </div>
+
+                            <div class="flex flex-wrap gap-1.5 text-[11px]">
+                                <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-medium">${emp.role || 'Nhân viên'}</span>
+                                <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">${emp.department || 'Mitsubishi BTH'}</span>
+                            </div>
+                        </div>
+
+                        <button onclick="testEmployeeEmailDirect('${emp.email}', '${escapeHtml(emp.name)}')" class="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs flex items-center justify-center gap-1.5 transition-all">
+                            <i data-lucide="send" class="w-3.5 h-3.5 text-blue-600"></i>
+                            <span>Gửi Thử Email Test</span>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function populateEmployeeDropdowns() {
+            const selects = ['taskForm_assignee_id', 'filterAssigneeSelect'];
+            selects.forEach(selId => {
+                const select = document.getElementById(selId);
+                if (!select) return;
+
+                const currentVal = select.value;
+                const isFilter = selId.startsWith('filter');
+                const defaultOption = isFilter ? '<option value="">Tất cả Nhân sự</option>' : '';
+
+                const optionsHtml = appState.employees.map(e => `
+                    <option value="${e.id}" ${e.email === 'taitran.1493@gmail.com' ? 'selected' : ''}>${e.name} (${e.email})</option>
+                `).join('');
+
+                select.innerHTML = defaultOption + optionsHtml;
+                if (currentVal) select.value = currentVal;
+            });
+        }
+
+        function testEmployeeEmailDirect(email, name) {
+            const task = { title: 'Kiểm tra hộp thư nhận việc', scheduled_time: 'Bây giờ' };
+            const assignee = { name: name };
+            if (appState.settings.apps_script_url) {
+                dispatchEmailViaAppsScript(task, assignee, email);
+                showToast(`Đã gửi email test tới ${email}!`, 'success');
+            } else {
+                openDirectGmailCompose(task);
+            }
+        }
+
+        function renderSettingsForm() {
+            const s = appState.settings;
+            document.getElementById('setting_smtp_email').value = s.smtp_email;
+            document.getElementById('setting_primary_recipient').value = s.primary_recipient;
+            document.getElementById('setting_sender_name').value = s.sender_name;
+            document.getElementById('setting_google_sheet_url').value = s.google_sheet_url;
+            document.getElementById('setting_apps_script_url').value = s.apps_script_url || '';
+            document.getElementById('setting_sound_enabled').value = s.sound_enabled || '1';
+        }
+
+        function saveSettings(e) {
+            e.preventDefault();
+            const s = appState.settings;
+            s.smtp_email = document.getElementById('setting_smtp_email').value.trim();
+            s.primary_recipient = document.getElementById('setting_primary_recipient').value.trim();
+            s.sender_name = document.getElementById('setting_sender_name').value.trim();
+            s.google_sheet_url = document.getElementById('setting_google_sheet_url').value.trim();
+            s.apps_script_url = document.getElementById('setting_apps_script_url').value.trim();
+            s.sound_enabled = document.getElementById('setting_sound_enabled').value;
+
+            // Extract sheet id
+            const match = s.google_sheet_url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+            if (match) s.google_sheet_id = match[1];
+
+            saveState();
+            renderAll();
+            showToast('Đã lưu cài đặt thành công!', 'success');
+        }
+
+        function renderLogsTable() {
+            const tbody = document.getElementById('logsTableBody');
+            const empty = document.getElementById('logsEmptyState');
+            if (!tbody) return;
+
+            if (appState.logs.length === 0) {
+                tbody.innerHTML = '';
+                if (empty) empty.classList.remove('hidden');
+                return;
+            }
+
+            if (empty) empty.classList.add('hidden');
+
+            tbody.innerHTML = appState.logs.map(log => `
+                <tr class="hover:bg-slate-50">
+                    <td class="py-2.5 px-3 font-mono text-slate-500 whitespace-nowrap">${log.sent_at}</td>
+                    <td class="py-2.5 px-3 font-medium text-slate-800">${escapeHtml(log.task_title)}</td>
+                    <td class="py-2.5 px-3 font-semibold text-slate-700">${escapeHtml(log.recipient_name)}</td>
+                    <td class="py-2.5 px-3 text-blue-600 font-mono text-[11px]">${escapeHtml(log.recipient_email)}</td>
+                    <td class="py-2.5 px-3 whitespace-nowrap">
+                        <span class="px-2 py-0.5 rounded-full font-bold text-[10px] bg-emerald-100 text-emerald-700">${escapeHtml(log.status)}</span>
+                    </td>
+                    <td class="py-2.5 px-3 text-slate-500 text-[11px] max-w-xs truncate">${escapeHtml(log.message)}</td>
+                </tr>
+            `).join('');
+        }
+
+        function clearLogs() {
+            if (!confirm('Bạn có muốn xóa toàn bộ lịch sử gửi thông báo?')) return;
+            appState.logs = [];
+            saveState();
+            renderLogsTable();
+            showToast('Đã dọn sạch nhật ký.', 'success');
+        }
+
+        // -------------------------------------------------------------
+        // TEMPLATE MODAL & COPY ACTIONS
+        // -------------------------------------------------------------
+        const SHEET_TEMPLATES = {
+            tasks: `Tiêu Đề Công Việc\tMô Tả Chi Tiết\tCa Làm Việc\tGiờ Nhắc\tNgười Thực Hiện\tMức Độ Ưu Tiên\tLặp Lại\tTrạng Thái\nĐăng bài Fanpage ca Sáng: Điểm tin & Kiến thức ngành\tSoạn nội dung chào ngày mới, chia sẻ tips lái xe an toàn cho khách hàng\tSáng\t09:00\ttaitran.1493@gmail.com\tCao\tHàng ngày\tChờ xử lý\nĐăng bài Fanpage ca Trưa: Tương tác / Q&A\tĐăng câu đố ngắn, khảo sát ý kiến khách hàng trong giờ nghỉ trưa\tTrưa\t12:00\ttaitran.1493@gmail.com\tBình thường\tHàng ngày\tChờ xử lý\nĐăng bài Fanpage ca Chiều: Dòng xe & Ưu đãi bảo dưỡng\tGiới thiệu dòng xe Mitsubishi và khuyến mãi bảo dưỡng trong ngày\tChiều\t16:30\ttaitran.1493@gmail.com\tKhẩn cấp\tHàng ngày\tChờ xử lý\nBáo cáo tương tác trong ngày\tTổng kết chỉ số Reach, Comment, Inbox của 3 ca đăng gửi nhóm quản lý\tTối\t18:00\ttaitran.1493@gmail.com\tBình thường\tHàng ngày\tChờ xử lý`,
+            employees: `Họ Và Tên\tEmail Nhận Thông Báo\tChức Vụ / Vai Trò\tPhòng Ban\tTrạng Thái\nTài Trần\ttaitran.1493@gmail.com\tQuản lý & Tiếp nhận chính\tMitsubishi BTH\tHoạt động\nTrần Thị Mai\tmai.social@gmail.com\tChuyên viên Content Social\tMarketing\tHoạt động\nNguyễn Văn An\tan.contentlead@gmail.com\tContent Leader\tMarketing\tHoạt động`,
+            reports: `Thời Gian Gửi\tTên Công Việc\tNgười Nhận\tMail Nhận\tMail Gửi\tTrạng Thái\tThông Điệp`
+        };
+
+        function openSheetTemplateModal() {
+            document.getElementById('sheetTemplateModal').classList.remove('hidden');
+            switchTemplateTab('tasks');
+            lucide.createIcons();
+        }
+
+        function closeSheetTemplateModal() {
+            document.getElementById('sheetTemplateModal').classList.add('hidden');
+        }
+
+        function switchTemplateTab(tabKey) {
+            currentTemplateTab = tabKey;
+            ['tasks', 'employees', 'reports'].forEach(k => {
+                const btn = document.getElementById(`tmplTab-${k}`);
+                if (!btn) return;
+                if (k === tabKey) {
+                    btn.className = 'px-4 py-2 text-xs font-bold border-b-2 border-emerald-600 text-emerald-700';
+                } else {
+                    btn.className = 'px-4 py-2 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800';
+                }
+            });
+
+            const box = document.getElementById('templateContentBox');
+            if (box) box.value = SHEET_TEMPLATES[tabKey];
+        }
+
+        function copyTemplateToClipboard() {
+            const box = document.getElementById('templateContentBox');
+            if (!box) return;
+            box.select();
+            navigator.clipboard.writeText(box.value).then(() => {
+                const label = document.getElementById('btnCopyLabel');
+                if (label) label.textContent = 'Đã Sao Chép!';
+                showToast('Đã copy bảng mẫu! Mở Google Sheet và nhấn Ctrl + V vào ô A1', 'success');
+                setTimeout(() => { if (label) label.textContent = 'Sao Chép Bảng'; }, 2500);
+            }).catch(() => {
+                showToast('Hãy chọn văn bản và nhấn Ctrl + C để copy', 'warning');
+            });
+        }
+
+        const APPS_SCRIPT_CODE = `function doPost(e) {
+  try {
+    var data = JSON.parse(e.postData.contents);
+    if (data.action === 'send_email') {
+      GmailApp.sendEmail(data.to, data.subject, data.bodyText, {
+        htmlBody: data.htmlBody,
+        name: 'Mitsubishi BTH - Nhắc Việc Tự Động'
+      });
+      
+      // Tự động ghi vào sheet BaoCao
+      var ss = SpreadsheetApp.getActiveSpreadsheet();
+      var reportSheet = ss.getSheetByName('BaoCao');
+      if (reportSheet) {
+        reportSheet.appendRow([new Date(), data.taskTitle, data.recipientName, data.to, Session.getActiveUser().getEmail(), 'Thành công', 'Đã dispatch qua Gmail']);
+      }
+      return ContentService.createTextOutput(JSON.stringify({success: true, message: 'Đã gửi email thành công!'})).setMimeType(ContentService.MimeType.JSON);
+    }
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({success: false, error: err.toString()})).setMimeType(ContentService.MimeType.JSON);
+  }
+}`;
+
+        function copyAppsScriptCode() {
+            navigator.clipboard.writeText(APPS_SCRIPT_CODE).then(() => {
+                const label = document.getElementById('btnCopyScriptLabel');
+                if (label) label.textContent = 'Đã Sao Chép Mã!';
+                showToast('Đã copy mã Apps Script! Dán vào Extensions > Apps Script trong Google Sheet', 'success');
+                setTimeout(() => { if (label) label.textContent = 'Sao Chép Mã Apps Script (1-Click)'; }, 2500);
+            }).catch(() => {
+                showToast('Không thể sao chép tự động', 'error');
+            });
+        }
+
+        // -------------------------------------------------------------
+        // TAB SWITCHING & TOAST NOTIFICATIONS
+        // -------------------------------------------------------------
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-blue-600', 'text-white', 'shadow-md');
+                btn.classList.add('text-slate-600', 'hover:bg-slate-100');
+            });
+
+            const activeBtn = document.getElementById(`tabBtn-${tabId}`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+                activeBtn.classList.remove('text-slate-600', 'hover:bg-slate-100');
+            }
+
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.add('hidden'));
+            const activePane = document.getElementById(`tabContent-${tabId}`);
+            if (activePane) activePane.classList.remove('hidden');
+
+            lucide.createIcons();
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            const colors = {
+                success: 'bg-emerald-600 text-white',
+                error: 'bg-red-600 text-white',
+                warning: 'bg-amber-600 text-white',
+                info: 'bg-slate-900 text-white'
+            };
+            const icons = {
+                success: 'check-circle-2',
+                error: 'alert-circle',
+                warning: 'alert-triangle',
+                info: 'info'
+            };
+
+            toast.className = `${colors[type] || colors.info} px-4 py-3 rounded-xl shadow-lg text-xs font-semibold flex items-center gap-2.5 pointer-events-auto transform translate-y-2 opacity-0 transition-all duration-200`;
+            toast.innerHTML = `
+                <i data-lucide="${icons[type] || 'info'}" class="w-4 h-4 shrink-0"></i>
+                <span>${escapeHtml(message)}</span>
+            `;
+
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 250);
+            }, 4500);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+    </script>
+</body>
+</html>

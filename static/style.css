@@ -1,0 +1,55 @@
+/* TaskReminder Hub Custom CSS */
+
+/* Smooth transitions */
+* {
+    transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+    transition-duration: 150ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Tab buttons styling */
+.tab-btn.active {
+    background-color: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Card hover animation */
+.task-card {
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.task-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+}
+
+/* Checkbox custom style */
+input[type="checkbox"] {
+    accent-color: #2563eb;
+}
+
+/* Pulse animation for live indicators */
+@keyframes pulseGlow {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.05); }
+}
+
+.pulse-glow {
+    animation: pulseGlow 2s infinite ease-in-out;
+}
