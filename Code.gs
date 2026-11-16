@@ -3,15 +3,15 @@
  * GOOGLE APPS SCRIPT - HỆ THỐNG NHẮC VIỆC & PHÂN CÔNG PHÒNG KINH DOANH
  * =========================================================================
  * Webhook URL:
- * https://script.google.com/macros/s/AKfycby1SKwkr2xx360aekZgE8tcYW_3t7WzJHcvfz1_6mwDgjZXlfziHi3ve-uX6gIZ1gEY/exec
+ * https://script.google.com/macros/s/AKfycbznDq_z0thisC7LSpshyeJr6X3QxNbe-NJ0RCrJ1fcvr4_4KyFGBer4aszpuxbdlggp/exec
  * 
- * Các chức năng:
- * 1. action: 'save_all'       -> Lưu đồng thời Công Việc vào "Danh Sach Cong Viec" và Nhân Sự vào "NhanSu"
- * 2. action: 'save_tasks'     -> Lưu toàn bộ danh sách công việc vào tab "Danh Sach Cong Viec"
- * 3. action: 'save_employees' -> Lưu toàn bộ danh sách nhân sự vào tab "NhanSu"
- * 4. action: 'send_email'     -> Gửi email nhắc việc qua Gmail & tự động ghi log vào tab "BaoCao"
- * 
- * Hỗ trợ luân phiên: Lưu rõ người đang phụ trách hiện tại, người kế tiếp và toàn bộ thứ tự vòng xoay!
+ * Các chức năng cốt lõi:
+ * 1. doPost(e): Webhook nhận lệnh từ giao diện Web (save_all, save_tasks, save_employees, send_email).
+ * 2. autoCheckAndSendReminders(): HÀM TỰ ĐỘNG CHẠY 24/7 TRÊN GOOGLE CLOUD
+ *    - Quét sheet "Danh Sach Cong Viec" và "NhanSu" mỗi 5-10 phút.
+ *    - Đến đúng giờ cấu hình (09:00, 12:00, 16:30...), tự gửi Gmail cho người đến lượt.
+ *    - Tắt máy tính, tắt trình duyệt vẫn tự động gửi 100%!
+ * 3. setupAutoReminderTrigger(): Chạy hàm này 1 lần để kích hoạt lịch tự động 24/7!
  * =========================================================================
  */
 
@@ -198,4 +198,188 @@ function doGet(e) {
     system: 'Phòng Kinh Doanh TaskHub',
     timestamp: new Date()
   })).setMimeType(ContentService.MimeType.JSON);
+}
+
+// =========================================================================
+// 5. HÀM TỰ ĐỘNG QUÉT VÀ NHẮC VIỆC 24/7 TRÊN MÁY CHỦ GOOGLE
+// =========================================================================
+/**
+ * Chạy tự động trên máy chủ Google hoàn toàn miễn phí, 24/7.
+ * Không cần mở máy tính, không cần mở trình duyệt!
+ */
+function autoCheckAndSendReminders() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var taskSheet = ss.getSheetByName('Danh Sach Cong Viec');
+  var empSheet = ss.getSheetByName('NhanSu');
+  var reportSheet = ss.getSheetByName('BaoCao');
+  if (!taskSheet) return;
+
+  var taskData = taskSheet.getDataRange().getValues();
+  if (taskData.length <= 1) return;
+
+  // Lấy danh sách nhân sự từ sheet NhanSu
+  var employees = [];
+  if (empSheet && empSheet.getLastRow() > 1) {
+    var empData = empSheet.getDataRange().getValues();
+    for (var i = 1; i < empData.length; i++) {
+      var row = empData[i];
+      if (row[0]) {
+        employees.push({
+          name: String(row[0]).trim(),
+          email: row[1] ? String(row[1]).trim() : 'tttai.mitsubishi.bth@gmail.com',
+          role: row[2] ? String(row[2]).trim() : '',
+          department: row[3] ? String(row[3]).trim() : ''
+        });
+      }
+    }
+  }
+  var defaultEmail = 'tttai.mitsubishi.bth@gmail.com';
+
+  var now = new Date();
+  var nowHour = parseInt(Utilities.formatDate(now, "GMT+7", "HH"), 10);
+  var nowMinute = parseInt(Utilities.formatDate(now, "GMT+7", "mm"), 10);
+  var currentTotalMinutes = nowHour * 60 + nowMinute;
+  var todayDateStr = Utilities.formatDate(now, "GMT+7", "yyyy-MM-dd");
+
+  var scriptProps = PropertiesService.getScriptProperties();
+
+  for (var t = 1; t < taskData.length; t++) {
+    var taskRow = taskData[t];
+    var title = taskRow[0] ? String(taskRow[0]).trim() : '';
+    var description = taskRow[1] ? String(taskRow[1]).trim() : '';
+    var slot = taskRow[2] ? String(taskRow[2]).trim() : '';
+    var timeStr = taskRow[3] ? String(taskRow[3]).trim() : '';
+    var assigneeInfo = taskRow[4] ? String(taskRow[4]).trim() : '';
+    var priority = taskRow[5] ? String(taskRow[5]).trim() : 'Bình thường';
+    var mode = taskRow[6] ? String(taskRow[6]).trim() : 'Cố định';
+    var status = taskRow[7] ? String(taskRow[7]).trim() : '';
+
+    if (!title) continue;
+    if (status.toLowerCase().includes('hoàn thành') || status.toLowerCase().includes('completed')) continue;
+
+    var timeList = [];
+    if (timeStr.includes(',')) {
+      timeList = timeStr.split(',').map(function(s) { return s.trim(); });
+    } else if (timeStr.includes(':')) {
+      timeList = [timeStr];
+    } else {
+      if (slot.includes('Sáng')) timeList = ['09:00'];
+      else if (slot.includes('Trưa')) timeList = ['12:00'];
+      else if (slot.includes('Chiều')) timeList = ['16:30'];
+      else if (slot.includes('Tối')) timeList = ['17:30'];
+    }
+
+    for (var m = 0; m < timeList.length; m++) {
+      var targetTime = timeList[m];
+      var parts = targetTime.split(':');
+      if (parts.length < 2) continue;
+      var targetH = parseInt(parts[0], 10);
+      var targetM = parseInt(parts[1], 10);
+      var targetTotalMinutes = targetH * 60 + targetM;
+
+      var diffMinutes = currentTotalMinutes - targetTotalMinutes;
+      // Kích hoạt khi đến giờ hoặc trễ tối đa 11 phút (phù hợp với trigger chạy mỗi 10 phút)
+      if (diffMinutes >= 0 && diffMinutes < 12) {
+        var reminderKey = 'SENT_' + todayDateStr + '_' + title + '_' + targetTime;
+        var alreadySent = scriptProps.getProperty(reminderKey);
+        if (alreadySent) continue;
+
+        var recipientsToSend = [];
+        if (mode.toLowerCase().includes('tất cả') || assigneeInfo.toLowerCase().includes('tất cả')) {
+          recipientsToSend = employees.length > 0 ? employees : [{ name: 'Toàn thể nhân sự', email: defaultEmail }];
+        } else if (assigneeInfo.includes('[Hiện tại:')) {
+          var match = assigneeInfo.match(/\[Hiện tại:\s*([^\]]+)\]/);
+          var curName = match ? match[1].trim() : '';
+          var foundEmp = employees.find(function(e) { return e.name.toLowerCase() === curName.toLowerCase(); });
+          if (foundEmp) {
+            recipientsToSend = [foundEmp];
+          } else {
+            recipientsToSend = [{ name: curName || 'Người phụ trách', email: defaultEmail }];
+          }
+        } else {
+          var singleEmp = employees.find(function(e) { return e.name.toLowerCase() === assigneeInfo.toLowerCase(); });
+          if (singleEmp) {
+            recipientsToSend = [singleEmp];
+          } else {
+            recipientsToSend = [{ name: assigneeInfo || 'Người phụ trách', email: defaultEmail }];
+          }
+        }
+
+        for (var r = 0; r < recipientsToSend.length; r++) {
+          var rec = recipientsToSend[r];
+          var targetEmail = rec.email || defaultEmail;
+
+          var emailSubject = '🔔 [Phòng Kinh Doanh - Nhắc Việc] ' + title + ' (' + targetTime + ')';
+          var emailBody = 'Xin chào ' + rec.name + ',\n\nBạn có công việc cần thực hiện theo lịch nhắc:\n' +
+                          '- Công việc: ' + title + '\n' +
+                          '- Khung giờ: ' + targetTime + '\n' +
+                          '- Ghi chú: ' + (description || 'Không có') + '\n\n' +
+                          'Trân trọng,\nPhòng Kinh Doanh';
+
+          var htmlContent = '<div style="font-family: Arial, sans-serif; max-width: 550px; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">' +
+            '<div style="background: #2563eb; color: #fff; padding: 20px;">' +
+            '<h2 style="margin: 0; font-size: 18px;">🔔 PHÒNG KINH DOANH - NHẮC NHỞ CÔNG VIỆC</h2>' +
+            '<p style="margin: 5px 0 0 0; font-size: 13px;">Hệ thống nhắc việc tự động 24/7 trên Google Cloud</p>' +
+            '</div>' +
+            '<div style="padding: 20px;">' +
+            '<p>Xin chào <strong>' + rec.name + '</strong>,</p>' +
+            '<p>Đã đến giờ thực hiện công việc được phân bổ hôm nay:</p>' +
+            '<div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">' +
+            '<h3 style="margin-top: 0; color: #0f172a;">' + title + '</h3>' +
+            (description ? '<p style="color: #475569; font-size: 13px;">' + description + '</p>' : '') +
+            '<p style="margin-bottom: 0;"><strong>⏰ Giờ thực hiện:</strong> ' + targetTime + ' | <strong>Độ ưu tiên:</strong> ' + priority + '</p>' +
+            '</div>' +
+            '<p style="font-size: 12px; color: #64748b; margin-top: 20px;">Vui lòng hoàn thành công việc đúng tiến độ.</p>' +
+            '</div>' +
+            '</div>';
+
+          try {
+            GmailApp.sendEmail(targetEmail, emailSubject, emailBody, {
+              htmlBody: htmlContent,
+              name: 'Phòng Kinh Doanh - Nhắc Việc Tự Động'
+            });
+
+            if (!reportSheet) {
+              reportSheet = ss.insertSheet('BaoCao');
+              reportSheet.appendRow(['Thời gian gửi', 'Tiêu đề công việc', 'Người nhận', 'Email nhận', 'Hệ thống gửi', 'Trạng thái', 'Ghi chú']);
+            }
+            var nowLogStr = Utilities.formatDate(new Date(), "GMT+7", "dd/MM/yyyy HH:mm:ss");
+            reportSheet.appendRow([
+              nowLogStr,
+              title,
+              rec.name,
+              targetEmail,
+              'Trigger Tự Động 24/7',
+              'Thành công',
+              'Tự động gửi theo giờ hẹn: ' + targetTime
+            ]);
+          } catch (mailErr) {
+            Logger.log('Lỗi gửi mail: ' + mailErr);
+          }
+        }
+
+        scriptProps.setProperty(reminderKey, 'SENT');
+      }
+    }
+  }
+}
+
+/**
+ * HÀM CÀI ĐẶT LỊCH NHẮC TỰ ĐỘNG 24/7
+ * Bấm chạy hàm này 1 lần duy nhất trong Apps Script là lịch kích hoạt vĩnh viễn!
+ */
+function setupAutoReminderTrigger() {
+  var allTriggers = ScriptApp.getProjectTriggers();
+  for (var i = 0; i < allTriggers.length; i++) {
+    if (allTriggers[i].getHandlerFunction() === 'autoCheckAndSendReminders') {
+      ScriptApp.deleteTrigger(allTriggers[i]);
+    }
+  }
+
+  ScriptApp.newTrigger('autoCheckAndSendReminders')
+    .timeBased()
+    .everyMinutes(10)
+    .create();
+
+  Logger.log('✓ Đã cài đặt xong Trigger tự động nhắc việc mỗi 10 phút!');
 }
