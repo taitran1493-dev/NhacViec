@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mitsubishi BTH - Quản Lý & Phân Bổ Nhắc Việc Tự Động</title>
+    <title>Phòng Kinh Doanh - Hệ Thống Nhắc Việc & Phân Bổ Nhân Sự</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -61,10 +61,10 @@
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
-                        <span class="font-bold text-slate-900 text-base sm:text-lg tracking-tight">Mitsubishi BTH TaskHub</span>
+                        <span class="font-bold text-slate-900 text-base sm:text-lg tracking-tight">Phòng Kinh Doanh TaskHub</span>
                         <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                            Webhook Active
+                            Online Active
                         </span>
                     </div>
                     <p class="text-xs text-slate-500 hidden sm:block">Phân bổ nhân sự xoay vòng & Gửi nhắc việc qua Gmail</p>
@@ -112,7 +112,7 @@
                 <div>
                     <h4 class="font-bold text-sm">Chưa có danh sách nhân sự từ Google Sheet NhanSu</h4>
                     <p class="text-xs text-amber-800 mt-0.5">
-                        Hệ thống cần danh sách nhân sự để phân bổ người phụ trách xoay vòng. Vui lòng nhập nhân sự trên Google Sheet rồi bấm <strong>Đồng Bộ Sheet</strong>, hoặc thêm nhanh bên dưới:
+                        Hệ thống sẽ tự động lấy danh sách nhân sự từ sheet <strong>NhanSu</strong> (chỉ cần nhập tên, không bắt buộc email). Vui lòng thêm nhân sự trên Google Sheet rồi bấm <strong>Đồng Bộ Sheet</strong> hoặc thêm nhanh bên dưới:
                     </p>
                 </div>
             </div>
@@ -136,13 +136,13 @@
                     </div>
                     <div>
                         <div class="flex flex-wrap items-center gap-2">
-                            <h3 class="font-bold text-slate-900 text-sm sm:text-base">Google Sheets: <em>Danh Sach Cong Viec • NhanSu • BaoCao</em></h3>
-                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-200/80 text-emerald-900">Webhook Exec Đã Kết Nối</span>
+                            <h3 class="font-bold text-slate-900 text-sm sm:text-base">Phòng Kinh Doanh - Google Sheets: <em>Danh Sach Cong Viec • NhanSu • BaoCao</em></h3>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-200/80 text-emerald-900">Webhook Exec Sẵn Sàng</span>
                         </div>
                         <p class="text-xs text-slate-600 mt-0.5 flex flex-wrap items-center gap-2">
                             <span>Mã Sheet: <strong class="font-mono text-slate-800" id="displaySheetId">1UvZKWzGpycOIjFHcjrHonQoCuFOWIpqfE0Jdj4eeXbA</strong></span>
                             <span class="text-slate-400">•</span>
-                            <span class="text-emerald-700 font-medium">Tự động gửi mail thật & ghi nhật ký vào sheet BaoCao</span>
+                            <span class="text-emerald-700 font-medium">Tự động nạp nhân sự từ sheet NhanSu & Ghi báo cáo vào sheet BaoCao</span>
                         </p>
                     </div>
                 </div>
@@ -151,7 +151,7 @@
                 <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
                     <button onclick="syncFromGoogleSheets()" class="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm flex items-center justify-center gap-1.5 transition-all">
                         <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-                        <span>Đồng Bộ Ngay</span>
+                        <span>Đồng Bộ Sheet</span>
                     </button>
                     <button onclick="openSheetTemplateModal()" class="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-300 text-xs font-semibold shadow-sm flex items-center justify-center gap-1.5 transition-all">
                         <i data-lucide="copy" class="w-3.5 h-3.5 text-emerald-600"></i>
@@ -164,18 +164,16 @@
                 </div>
             </div>
 
-            <!-- Email Setup Pills -->
+            <!-- Email Badges Bar -->
             <div class="pt-2 border-t border-emerald-200/60 flex flex-wrap items-center justify-between text-xs gap-2">
                 <div class="flex flex-wrap items-center gap-3">
                     <span class="flex items-center gap-1 text-slate-600">
                         <i data-lucide="send" class="w-3.5 h-3.5 text-blue-600"></i>
-                        <span>Mail gửi:</span>
-                        <strong class="font-mono text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200" id="badgeSenderEmail">tttai.mitsubishi.bth@gmail.com</strong>
+                        <span>Mail thông báo & nhận mặc định:</span>
+                        <strong class="font-mono text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200" id="badgeDefaultEmail">tttai.mitsubishi.bth@gmail.com</strong>
                     </span>
-                    <span class="flex items-center gap-1 text-slate-600">
-                        <i data-lucide="inbox" class="w-3.5 h-3.5 text-emerald-600"></i>
-                        <span>Mail nhận chính:</span>
-                        <strong class="font-mono text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200" id="badgeReceiverEmail">taitran.1493@gmail.com</strong>
+                    <span class="text-[11px] text-slate-500 bg-emerald-100/60 text-emerald-800 px-2 py-0.5 rounded">
+                        * Nhân sự không cần nhập email riêng, thông báo sẽ gửi về hòm thư mặc định này
                     </span>
                 </div>
                 <div class="text-[11px] text-slate-500 flex items-center gap-1">
@@ -283,7 +281,7 @@
                 <i data-lucide="calendar-x" class="w-10 h-10 mx-auto text-slate-300"></i>
                 <h4 class="font-bold text-slate-700 text-sm">Chưa có công việc nào trong danh sách</h4>
                 <p class="text-xs text-slate-500 max-w-md mx-auto">
-                    Bạn có thể tự do thêm công việc mới theo nhu cầu (ví dụ: đăng bài xoay vòng theo ngày, nhắc tất cả nhân sự báo cáo, trực hotline...).
+                    Bạn có thể tự do thêm công việc mới theo nhu cầu của Phòng Kinh Doanh (ví dụ: xoay vòng đăng bài mỗi ngày 1 bạn, nhắc báo cáo cuối ngày...).
                 </p>
                 <button onclick="openTaskModal()" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow transition-all inline-flex items-center gap-1.5">
                     <i data-lucide="plus" class="w-4 h-4"></i> Thêm Công Việc Đầu Tiên
@@ -442,13 +440,21 @@
         <div id="tabContent-team" class="tab-pane hidden space-y-5">
             <div class="flex items-center justify-between">
                 <div>
-                    <h3 class="font-bold text-slate-900 text-base">Danh Sách Nhân Sự Phụ Trách & Thực Hiện (Sheet NhanSu)</h3>
-                    <p class="text-xs text-slate-500">Dữ liệu được đồng bộ trực tiếp từ Google Sheet <em>NhanSu</em> của bạn</p>
+                    <h3 class="font-bold text-slate-900 text-base">Danh Sách Nhân Sự Phòng Kinh Doanh (Sheet NhanSu)</h3>
+                    <p class="text-xs text-slate-500">
+                        Lấy từ Google Sheet <em>NhanSu</em>. Không bắt buộc email riêng (mặc định thông báo sẽ gửi về <strong>tttai.mitsubishi.bth@gmail.com</strong>)
+                    </p>
                 </div>
-                <button onclick="openEmployeeModal()" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs sm:text-sm shadow-md shadow-blue-500/20 flex items-center gap-1.5 transition-all">
-                    <i data-lucide="user-plus" class="w-4 h-4"></i>
-                    <span>Thêm Nhân Sự Mới</span>
-                </button>
+                <div class="flex items-center gap-2">
+                    <button onclick="syncFromGoogleSheets()" class="px-3.5 py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-semibold text-xs flex items-center gap-1.5 transition-all">
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                        <span>Lấy Từ Google Sheet</span>
+                    </button>
+                    <button onclick="openEmployeeModal()" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs sm:text-sm shadow-md shadow-blue-500/20 flex items-center gap-1.5 transition-all">
+                        <i data-lucide="user-plus" class="w-4 h-4"></i>
+                        <span>Thêm Nhân Sự Mới</span>
+                    </button>
+                </div>
             </div>
 
             <!-- Employee Cards Grid -->
@@ -530,12 +536,12 @@
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Mail Gửi Thông Báo</label>
+                                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Mail Gửi & Nhận Mặc Định</label>
                                     <input type="email" id="setting_smtp_email" value="tttai.mitsubishi.bth@gmail.com" required class="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Mail Nhận Mặc Định</label>
-                                    <input type="email" id="setting_primary_recipient" value="taitran.1493@gmail.com" required class="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Tên Người Gửi Hiển Thị</label>
+                                    <input type="text" id="setting_sender_name" value="Phòng Kinh Doanh - Nhắc Việc Tự Động" class="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
                                 </div>
                             </div>
 
@@ -544,18 +550,12 @@
                                 <input type="text" id="setting_google_sheet_url" value="https://docs.google.com/spreadsheets/d/1UvZKWzGpycOIjFHcjrHonQoCuFOWIpqfE0Jdj4eeXbA/edit?usp=sharing" class="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono text-xs">
                             </div>
 
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Tên Người Gửi Hiển Thị</label>
-                                    <input type="text" id="setting_sender_name" value="Mitsubishi BTH - Nhắc Việc Tự Động" class="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Âm Thanh Báo Giờ Nhắc</label>
-                                    <select id="setting_sound_enabled" class="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-blue-500">
-                                        <option value="1">Bật âm thanh chuông báo</option>
-                                        <option value="0">Tắt âm thanh</option>
-                                    </select>
-                                </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Âm Thanh Báo Giờ Nhắc</label>
+                                <select id="setting_sound_enabled" class="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-blue-500">
+                                    <option value="1">Bật âm thanh chuông báo</option>
+                                    <option value="0">Tắt âm thanh</option>
+                                </select>
                             </div>
 
                             <div class="pt-4 border-t border-slate-100 flex flex-wrap items-center gap-3">
@@ -587,11 +587,11 @@
                         <div class="p-3 bg-slate-800/80 rounded-xl border border-slate-700 text-xs text-slate-300 space-y-1.5">
                             <div class="font-bold text-white flex items-center gap-1">
                                 <i data-lucide="info" class="w-3.5 h-3.5 text-blue-400"></i>
-                                <span>Cơ chế hoạt động:</span>
+                                <span>Cơ chế thông báo Phòng Kinh Doanh:</span>
                             </div>
-                            <p>• Khi đến giờ hẹn (hoặc bấm Nhắc Ngay), web sẽ gọi Webhook này.</p>
-                            <p>• Webhook tự động dùng Gmail của bạn để gửi thư tới người phụ trách.</p>
-                            <p>• Đồng thời tự động ghi thêm 1 dòng vào sheet <strong>BaoCao</strong> trong Google Sheet!</p>
+                            <p>• Mail nhận thông báo mặc định: <strong>tttai.mitsubishi.bth@gmail.com</strong>.</p>
+                            <p>• Khi thêm nhân sự mới, <strong>không bắt buộc nhập email riêng</strong>.</p>
+                            <p>• Tự động nạp nhân sự từ Google Sheet nếu có và tự ghi nhật ký vào sheet <strong>BaoCao</strong>!</p>
                         </div>
                     </div>
                 </div>
@@ -638,7 +638,7 @@
 
     <!-- Footer -->
     <footer class="mt-auto border-t border-slate-200 bg-white py-4 text-center text-xs text-slate-500">
-        <p>Mitsubishi BTH TaskHub • Bản chạy online GitHub Pages • Tích hợp Google Apps Script Webhook</p>
+        <p>Phòng Kinh Doanh TaskHub • Bản chạy online GitHub Pages • Tích hợp Google Apps Script Webhook</p>
     </footer>
 
     <!-- ======================================================== -->
@@ -657,13 +657,13 @@
             </div>
             <div class="p-6 space-y-4">
                 <p class="text-xs text-slate-600">
-                    Bấm nút <strong>"Sao Chép Bảng"</strong> bên dưới rồi mở Google Sheet, chọn ô <strong>A1</strong> và nhấn <strong>Ctrl + V</strong> để dán toàn bộ dữ liệu mẫu vào:
+                    Bấm nút <strong>"Sao Chép Bảng"</strong> bên dưới rồi mở Google Sheet, chọn ô <strong>A1</strong> và nhấn <strong>Ctrl + V</strong> để dán:
                 </p>
 
                 <!-- Sheet Tabs Selector -->
                 <div class="flex border-b border-slate-200 gap-2">
                     <button onclick="switchTemplateTab('employees')" id="tmplTab-employees" class="px-4 py-2 text-xs font-bold border-b-2 border-emerald-600 text-emerald-700">
-                        1. NhanSu (Cần thiết nhất)
+                        1. NhanSu (Không bắt buộc mail)
                     </button>
                     <button onclick="switchTemplateTab('tasks')" id="tmplTab-tasks" class="px-4 py-2 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800">
                         2. Danh Sach Cong Viec
@@ -685,7 +685,7 @@
                 <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 flex items-start gap-2">
                     <i data-lucide="info" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
                     <div>
-                        <strong>Mẹo:</strong> Sau khi dán dữ liệu mẫu hoặc chỉnh sửa công việc/nhân sự trên Google Sheet, bạn chỉ cần bấm nút <strong>"Đồng Bộ Ngay"</strong> để hệ thống nạp tức thì!
+                        <strong>Mẹo:</strong> Trong sheet <em>NhanSu</em>, bạn chỉ cần nhập danh sách họ tên các bạn trong Phòng Kinh Doanh (cột Email có thể để trống). Hệ thống sẽ tự động gán email nhận mặc định là <strong>tttai.mitsubishi.bth@gmail.com</strong>!
                     </div>
                 </div>
 
@@ -699,7 +699,7 @@
     </div>
 
     <!-- ======================================================== -->
-    <!-- MODAL: THÊM / SỬA CÔNG VIỆC (HỖ TRỢ ĐA DẠNG CƠ CHẾ)      -->
+    <!-- MODAL: THÊM / SỬA CÔNG VIỆC                               -->
     <!-- ======================================================== -->
     <div id="taskModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-xl max-w-xl w-full max-h-[90vh] overflow-y-auto border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
@@ -714,7 +714,7 @@
 
                 <div>
                     <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tiêu Đề Công Việc *</label>
-                    <input type="text" id="taskForm_title" placeholder="VD: Đăng bài Fanpage Mitsubishi hoặc Nhắc nộp Báo cáo ngày" required class="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                    <input type="text" id="taskForm_title" placeholder="VD: Đăng bài Fanpage hoặc Báo cáo chỉ số ngày" required class="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
                 </div>
 
                 <div>
@@ -753,15 +753,15 @@
 
                     <div>
                         <select id="taskForm_assignee_mode" onchange="toggleAssigneeModeFields()" class="w-full px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl border border-blue-300 bg-white text-blue-950 focus:outline-none focus:border-blue-600">
-                            <option value="daily_rotation">🔄 Xoay vòng lần lượt THEO NGÀY (VD: Mỗi ngày 1 bạn đăng bài)</option>
-                            <option value="weekly_rotation">🔄 Xoay vòng lần lượt THEO TUẦN (VD: Mỗi tuần 1 bạn đăng bài)</option>
+                            <option value="daily_rotation">🔄 Xoay vòng lần lượt THEO NGÀY (VD: Mỗi ngày 1 bạn phụ trách 3 ca)</option>
+                            <option value="weekly_rotation">🔄 Xoay vòng lần lượt THEO TUẦN (VD: Mỗi tuần 1 bạn phụ trách)</option>
                             <option value="shift_rotation">⏱️ Xoay vòng THEO CA (Sáng bạn A, Trưa bạn B, Chiều bạn C)</option>
-                            <option value="broadcast">📢 Nhắc TẤT CẢ nhân sự (VD: Nhắc báo cáo cuối ngày)</option>
+                            <option value="broadcast">📢 Nhắc TẤT CẢ nhân sự (VD: Nhắc nộp báo cáo cuối ngày)</option>
                             <option value="single">👤 Chỉ định 1 nhân sự cố định</option>
                         </select>
                     </div>
 
-                    <!-- Single Assignee Picker (Shown if mode === 'single') -->
+                    <!-- Single Assignee Picker -->
                     <div id="fieldSingleAssignee" class="hidden">
                         <label class="text-[11px] font-semibold text-slate-600 block mb-1">Chọn Nhân Sự Phụ Trách</label>
                         <select id="taskForm_assignee_id" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-blue-500">
@@ -769,7 +769,7 @@
                         </select>
                     </div>
 
-                    <!-- Rotation Pool Checklist (Shown if rotation mode) -->
+                    <!-- Rotation Pool Checklist -->
                     <div id="fieldRotationPool" class="space-y-1.5">
                         <div class="flex items-center justify-between text-[11px]">
                             <span class="font-semibold text-slate-700">Chọn các nhân sự tham gia xoay vòng:</span>
@@ -779,13 +779,13 @@
                             <!-- Populated dynamically -->
                         </div>
                         <p class="text-[10px] text-slate-500 italic">
-                            * Hệ thống sẽ tự động xoay tua lần lượt qua các nhân sự đã chọn theo thứ tự, không lo sót việc.
+                            * Hệ thống sẽ tự động xoay tua lần lượt qua các nhân sự đã chọn theo thứ tự ngày/tuần.
                         </p>
                     </div>
 
-                    <!-- Broadcast Info (Shown if broadcast) -->
+                    <!-- Broadcast Info -->
                     <div id="fieldBroadcastInfo" class="hidden p-2.5 rounded-lg bg-blue-100/70 text-blue-900 text-xs">
-                        📢 <strong>Chế độ gửi đồng loạt:</strong> Khi đến giờ, hệ thống sẽ tự động gửi email nhắc nhở tới <strong>toàn bộ nhân sự</strong> có trong danh sách!
+                        📢 <strong>Chế độ gửi đồng loạt:</strong> Khi đến giờ, hệ thống sẽ tự động gửi email nhắc nhở tới <strong>toàn bộ nhân sự</strong> Phòng Kinh Doanh!
                     </div>
                 </div>
 
@@ -823,12 +823,12 @@
     </div>
 
     <!-- ======================================================== -->
-    <!-- MODAL: THÊM / SỬA NHÂN VIÊN (NHANSU)                      -->
+    <!-- MODAL: THÊM / SỬA NHÂN VIÊN (KHÔNG BẮT BUỘC EMAIL)        -->
     <!-- ======================================================== -->
     <div id="employeeModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
             <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-                <h3 id="employeeModalTitle" class="font-bold text-slate-900 text-base">Thêm Nhân Sự Vào Danh Sách</h3>
+                <h3 id="employeeModalTitle" class="font-bold text-slate-900 text-base">Thêm Nhân Sự Mới</h3>
                 <button onclick="closeEmployeeModal()" class="w-8 h-8 rounded-lg hover:bg-slate-200 text-slate-500 flex items-center justify-center">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
@@ -837,24 +837,27 @@
                 <input type="hidden" id="empForm_id">
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Họ Và Tên *</label>
-                    <input type="text" id="empForm_name" placeholder="VD: Tài Trần hoặc Nguyễn Văn A" required class="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Họ Và Tên Nhân Sự *</label>
+                    <input type="text" id="empForm_name" placeholder="VD: Tài Trần, Nguyễn Văn A, Trần Thị B..." required class="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Email Gmail Nhận Thông Báo *</label>
-                    <input type="email" id="empForm_email" placeholder="VD: taitran.1493@gmail.com" required class="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
-                    <p class="text-[11px] text-slate-500 mt-1">Thông báo sẽ gửi thẳng vào hòm thư này khi đến phiên trực/nhắc việc.</p>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1 flex items-center justify-between">
+                        <span>Email Gmail Nhận Thông Báo</span>
+                        <span class="text-[10px] text-emerald-600 font-semibold lowercase">(Không bắt buộc)</span>
+                    </label>
+                    <input type="email" id="empForm_email" placeholder="Để trống nếu muốn gửi về mail mặc định: tttai.mitsubishi.bth@gmail.com" class="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                    <p class="text-[11px] text-slate-500 mt-1">Nếu không có email riêng, thông báo sẽ tự động gửi về hòm thư mặc định.</p>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Chức Vụ / Vai Trò</label>
-                        <input type="text" id="empForm_role" placeholder="VD: Content / Sale" class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500">
+                        <input type="text" id="empForm_role" value="Chuyên viên kinh doanh" placeholder="VD: Chuyên viên kinh doanh" class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Phòng Ban</label>
-                        <input type="text" id="empForm_department" value="Mitsubishi BTH" placeholder="VD: Mitsubishi BTH" class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500">
+                        <input type="text" id="empForm_department" value="Phòng Kinh Doanh" class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500">
                     </div>
                 </div>
 
@@ -885,21 +888,21 @@
     <!-- CLIENT-SIDE APPLICATION JAVASCRIPT                       -->
     <!-- ======================================================== -->
     <script>
-        const STORAGE_KEY = 'mitsu_bth_reminders_app_v2';
+        const STORAGE_KEY = 'phong_kinh_doanh_task_hub_v3';
 
-        // Default initial data: Clean tasks (NO forced hardcoded tasks)
+        // Default initial data: Clean tasks, updated to Phòng Kinh Doanh & default email tttai.mitsubishi.bth@gmail.com
         const DEFAULT_DATA = {
             settings: {
                 smtp_email: 'tttai.mitsubishi.bth@gmail.com',
-                primary_recipient: 'taitran.1493@gmail.com',
-                sender_name: 'Mitsubishi BTH - Nhắc Việc Tự Động',
+                primary_recipient: 'tttai.mitsubishi.bth@gmail.com',
+                sender_name: 'Phòng Kinh Doanh - Nhắc Việc Tự Động',
                 google_sheet_url: 'https://docs.google.com/spreadsheets/d/1UvZKWzGpycOIjFHcjrHonQoCuFOWIpqfE0Jdj4eeXbA/edit?usp=sharing',
                 google_sheet_id: '1UvZKWzGpycOIjFHcjrHonQoCuFOWIpqfE0Jdj4eeXbA',
                 apps_script_url: 'https://script.google.com/macros/s/AKfycbwP2j1YvdVGwD__ArFRVHoWCMMzvN07weeEmat7YYpuUMITXGqtf0va4h1vLiUdLa9C/exec',
                 sound_enabled: '1'
             },
             employees: [
-                { id: 1, name: 'Tài Trần', email: 'taitran.1493@gmail.com', role: 'Quản lý & Điều hành', department: 'Mitsubishi BTH', color: '#2563EB' }
+                { id: 1, name: 'Tài Trần', email: 'tttai.mitsubishi.bth@gmail.com', role: 'Quản lý điều hành', department: 'Phòng Kinh Doanh', color: '#2563EB' }
             ],
             tasks: [],
             logs: []
@@ -948,7 +951,7 @@
             // Auto check notification permission status
             updateNotificationBtnStatus();
 
-            // If tasks are empty on first run, show empty state cleanly
+            // Try initial sync from Google Sheets if available
             checkPersonnelStatus();
         });
 
@@ -992,7 +995,7 @@
                 sub.className = 'text-xs text-amber-600 font-semibold mt-0.5';
             } else {
                 banner.classList.add('hidden');
-                sub.textContent = `${appState.employees.length} thành viên sẵn sàng`;
+                sub.textContent = `${appState.employees.length} thành viên Phòng Kinh Doanh`;
                 sub.className = 'text-xs text-slate-400 mt-0.5';
             }
         }
@@ -1013,8 +1016,7 @@
 
         function renderBadges() {
             const s = appState.settings;
-            document.getElementById('badgeSenderEmail').textContent = s.smtp_email;
-            document.getElementById('badgeReceiverEmail').textContent = s.primary_recipient;
+            document.getElementById('badgeDefaultEmail').textContent = s.smtp_email || 'tttai.mitsubishi.bth@gmail.com';
             document.getElementById('displaySheetId').textContent = s.google_sheet_id;
             document.getElementById('btnOpenSheetLink').href = s.google_sheet_url;
         }
@@ -1073,7 +1075,7 @@
         // -------------------------------------------------------------
         function detectConflicts() {
             const today = new Date();
-            const employeeTaskMap = {}; // empId -> [tasks]
+            const employeeTaskMap = {};
             let conflictsFound = [];
 
             appState.tasks.forEach(task => {
@@ -1084,12 +1086,10 @@
                 });
             });
 
-            // Check if any employee has multiple tasks at identical or nearby time
             Object.keys(employeeTaskMap).forEach(empId => {
                 const taskList = employeeTaskMap[empId];
                 if (taskList.length > 1) {
                     const emp = appState.employees.find(e => e.id === parseInt(empId));
-                    // Check exact scheduled time match
                     const times = taskList.map(t => t.scheduled_time);
                     const duplicateTimes = times.filter((item, index) => times.indexOf(item) !== index);
                     if (duplicateTimes.length > 0) {
@@ -1109,7 +1109,7 @@
         }
 
         // -------------------------------------------------------------
-        // GOOGLE SHEETS LIVE SYNC (GVIZ API)
+        // GOOGLE SHEETS LIVE SYNC (GVIZ API - TỰ ĐỘNG LẤY NHÂN SỰ)
         // -------------------------------------------------------------
         async function fetchSheetDataViaGviz(sheetId, gid) {
             return new Promise((resolve, reject) => {
@@ -1142,6 +1142,7 @@
         async function syncFromGoogleSheets() {
             showToast('Đang kết nối tới Google Sheet...', 'info');
             const sheetId = appState.settings.google_sheet_id || '1UvZKWzGpycOIjFHcjrHonQoCuFOWIpqfE0Jdj4eeXbA';
+            const defaultEmail = appState.settings.smtp_email || 'tttai.mitsubishi.bth@gmail.com';
 
             try {
                 // 1. Sync Employees (gid: 1121546996 - NhanSu)
@@ -1155,21 +1156,22 @@
                         empTable.rows.forEach(r => {
                             const c = r.c || [];
                             const name = c[0]?.v ? String(c[0].v).trim() : '';
-                            const email = c[1]?.v ? String(c[1].v).trim() : '';
-                            const role = c[2]?.v ? String(c[2].v).trim() : 'Nhân viên';
-                            const dept = c[3]?.v ? String(c[3].v).trim() : 'Mitsubishi BTH';
+                            // Email is optional! If empty, default to tttai.mitsubishi.bth@gmail.com
+                            const email = (c[1]?.v && String(c[1].v).trim()) ? String(c[1].v).trim() : defaultEmail;
+                            const role = c[2]?.v ? String(c[2].v).trim() : 'Chuyên viên kinh doanh';
+                            const dept = c[3]?.v ? String(c[3].v).trim() : 'Phòng Kinh Doanh';
 
-                            if (email) {
-                                const exist = appState.employees.find(e => e.email.toLowerCase() === email.toLowerCase());
+                            if (name && name.toLowerCase() !== 'họ và tên' && name.toLowerCase() !== 'họ tên') {
+                                const exist = appState.employees.find(e => e.name.toLowerCase() === name.toLowerCase());
                                 if (exist) {
-                                    exist.name = name || exist.name;
+                                    exist.email = email;
                                     exist.role = role;
                                     exist.department = dept;
                                     empUpdated++;
                                 } else {
                                     appState.employees.push({
                                         id: Date.now() + Math.floor(Math.random() * 1000),
-                                        name: name || email,
+                                        name: name,
                                         email: email,
                                         role: role,
                                         department: dept,
@@ -1203,7 +1205,7 @@
                             const rawPriority = c[5]?.v ? String(c[5].v).trim().toLowerCase() : 'medium';
                             const rawStatus = c[7]?.v ? String(c[7].v).trim().toLowerCase() : 'pending';
 
-                            if (title) {
+                            if (title && title.toLowerCase() !== 'tiêu đề công việc' && title.toLowerCase() !== 'tiêu đề') {
                                 let slot = 'morning';
                                 if (rawSlot.includes('trưa') || rawSlot.includes('noon')) slot = 'noon';
                                 else if (rawSlot.includes('chiều') || rawSlot.includes('afternoon')) slot = 'afternoon';
@@ -1219,7 +1221,7 @@
 
                                 const status = (rawStatus.includes('xong') || rawStatus.includes('hoàn thành')) ? 'completed' : 'pending';
 
-                                // Find assignee
+                                // Find assignee or rotation mode
                                 let assigneeId = appState.employees[0]?.id || 1;
                                 let mode = 'single';
                                 if (rawAssignee.toLowerCase().includes('tất cả') || rawAssignee.toLowerCase().includes('all')) {
@@ -1227,7 +1229,7 @@
                                 } else if (rawAssignee.toLowerCase().includes('xoay') || rawAssignee.toLowerCase().includes('ngày')) {
                                     mode = 'daily_rotation';
                                 } else if (rawAssignee) {
-                                    const found = appState.employees.find(e => e.email.toLowerCase() === rawAssignee.toLowerCase() || e.name.toLowerCase() === rawAssignee.toLowerCase());
+                                    const found = appState.employees.find(e => e.name.toLowerCase() === rawAssignee.toLowerCase() || e.email.toLowerCase() === rawAssignee.toLowerCase());
                                     if (found) assigneeId = found.id;
                                 }
 
@@ -1268,7 +1270,7 @@
                 renderAll();
 
                 if (nhanSuEmpty && empAdded === 0 && empUpdated === 0) {
-                    showToast('Đã kết nối! Sheet NhanSu trên Google Drive hiện chưa có dòng nào. Vui lòng thêm nhân sự để phân bổ công việc!', 'warning');
+                    showToast('Đã kết nối! Sheet NhanSu trên Google Drive chưa có dòng nào. Bạn có thể bấm Thêm Nhân Sự để bổ sung!', 'warning');
                 } else {
                     showToast(`Đồng bộ thành công! Nhân sự: +${empAdded} mới, cập nhật ${empUpdated}. Công việc: +${taskAdded} mới.`, 'success');
                 }
@@ -1309,7 +1311,7 @@
             // 1. Browser Notification
             if ("Notification" in window && Notification.permission === 'granted') {
                 new Notification(`⏰ [NHẮC VIỆC] ${task.title}`, {
-                    body: `Khung giờ: ${task.scheduled_time} • Phụ trách: ${assigneeNames}`,
+                    body: `Khung giờ: ${task.scheduled_time} • Người thực hiện: ${assigneeNames}`,
                     icon: "https://cdn-icons-png.flaticon.com/512/3602/3602145.png"
                 });
             }
@@ -1326,22 +1328,24 @@
             const webhookUrl = appState.settings.apps_script_url.trim();
             if (!webhookUrl) return;
 
+            const targetEmail = assignee.email || appState.settings.smtp_email || 'tttai.mitsubishi.bth@gmail.com';
+
             const payload = {
                 action: 'send_email',
-                to: assignee.email,
-                subject: `🔔 [Nhắc Việc] ${task.title} (${task.scheduled_time})`,
+                to: targetEmail,
+                subject: `🔔 [Phòng Kinh Doanh - Nhắc Việc] ${task.title} (${task.scheduled_time})`,
                 taskTitle: task.title,
                 recipientName: assignee.name,
-                bodyText: `Xin chào ${assignee.name},\nBạn được phân công thực hiện công việc: ${task.title}\nKhung giờ: ${task.scheduled_time}\nGhi chú: ${task.description || 'Không có'}\n\nTrân trọng,\nMitsubishi BTH`,
+                bodyText: `Xin chào ${assignee.name},\nBạn được phân công thực hiện công việc: ${task.title}\nKhung giờ: ${task.scheduled_time}\nGhi chú: ${task.description || 'Không có'}\n\nTrân trọng,\nPhòng Kinh Doanh`,
                 htmlBody: `
                 <div style="font-family: Arial, sans-serif; max-width: 550px; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
                     <div style="background: #2563eb; color: #fff; padding: 20px;">
-                        <h2 style="margin: 0;">🔔 NHẮC NHỞ CÔNG VIỆC</h2>
-                        <p style="margin: 5px 0 0 0; font-size: 13px;">Hệ thống phân công & nhắc việc Mitsubishi BTH</p>
+                        <h2 style="margin: 0;">🔔 PHÒNG KINH DOANH - NHẮC NHỞ CÔNG VIỆC</h2>
+                        <p style="margin: 5px 0 0 0; font-size: 13px;">Hệ thống phân công & nhắc việc tự động</p>
                     </div>
                     <div style="padding: 20px;">
                         <p>Xin chào <strong>${assignee.name}</strong>,</p>
-                        <p>Hôm nay bạn được phân công phụ trách công việc sau:</p>
+                        <p>Bạn được phân công phụ trách công việc sau trong ngày hôm nay:</p>
                         <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
                             <h3 style="margin-top: 0; color: #0f172a;">${task.title}</h3>
                             <p style="color: #475569; font-size: 13px;">${task.description || ''}</p>
@@ -1359,9 +1363,9 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                addLogEntry(task.title, assignee.name, assignee.email, 'Đã gửi qua Gmail', 'Đã chuyển lệnh gửi qua Google Apps Script Webhook.');
+                addLogEntry(task.title, assignee.name, targetEmail, 'Đã gửi qua Gmail', 'Đã chuyển lệnh gửi qua Google Apps Script Webhook.');
             } catch (e) {
-                addLogEntry(task.title, assignee.name, assignee.email, 'Thất bại', 'Lỗi kết nối Webhook: ' + e.message);
+                addLogEntry(task.title, assignee.name, targetEmail, 'Thất bại', 'Lỗi kết nối Webhook: ' + e.message);
             }
         }
 
@@ -1387,9 +1391,9 @@
         }
 
         function testSendEmail() {
-            const recipient = appState.settings.primary_recipient;
-            const dummyTask = { title: 'Thử nghiệm kết nối Webhook', scheduled_time: 'Ngay bây giờ', description: 'Kiểm tra hoạt động gửi mail từ Mitsubishi BTH' };
-            const dummyAssignee = { name: 'Tài Trần', email: recipient };
+            const recipient = appState.settings.smtp_email || 'tttai.mitsubishi.bth@gmail.com';
+            const dummyTask = { title: 'Thử nghiệm nhắc việc Phòng Kinh Doanh', scheduled_time: 'Ngay bây giờ', description: 'Kiểm tra hoạt động gửi mail tự động' };
+            const dummyAssignee = { name: 'Quản Lý Kinh Doanh', email: recipient };
 
             showToast('Đang gửi email test qua Webhook Google...', 'info');
             dispatchEmailViaWebhook(dummyTask, dummyAssignee);
@@ -1423,9 +1427,9 @@
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(587.33, now); // D5
-                osc.frequency.setValueAtTime(880, now + 0.1); // A5
-                osc.frequency.setValueAtTime(1174.66, now + 0.25); // D6
+                osc.frequency.setValueAtTime(587.33, now);
+                osc.frequency.setValueAtTime(880, now + 0.1);
+                osc.frequency.setValueAtTime(1174.66, now + 0.25);
                 gain.gain.setValueAtTime(0.3, now);
                 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
                 osc.connect(gain);
@@ -1447,7 +1451,7 @@
                 if (permission === 'granted') {
                     showToast('Đã bật chuông & thông báo màn hình!', 'success');
                     playChimeSound();
-                    new Notification("Mitsubishi BTH TaskHub", {
+                    new Notification("Phòng Kinh Doanh TaskHub", {
                         body: "Hệ thống sẵn sàng gửi chuông và thông báo nhắc việc đúng giờ!",
                         icon: "https://cdn-icons-png.flaticon.com/512/3602/3602145.png"
                     });
@@ -1542,7 +1546,6 @@
             const pBadgeClass = priorityColors[task.priority] || priorityColors.medium;
             const pLabel = { urgent: 'Khẩn cấp', high: 'Ưu tiên cao', medium: 'Bình thường', low: 'Thấp' }[task.priority] || 'Bình thường';
 
-            // Calculate who does this task TODAY based on mode
             const assignees = getAssignedPersonnelForTask(task, today);
             const modeLabels = {
                 'daily_rotation': '🔄 Xoay vòng ngày',
@@ -1662,7 +1665,6 @@
                 const isDone = t.status === 'completed';
                 const assignees = getAssignedPersonnelForTask(t, today);
                 const assignedNames = assignees.map(a => a.name).join(', ') || 'Chưa phân công';
-
                 const timeDisplay = t.slot === 'all_day_3' ? '3 ca (09:00, 12:00, 16:30)' : t.scheduled_time;
 
                 return `
@@ -1703,7 +1705,6 @@
             lucide.createIcons();
         }
 
-        // Render 7-day Matrix Schedule
         function renderMatrixSchedule() {
             const tbody = document.getElementById('matrixTableBody');
             const headerRow = document.getElementById('matrixHeaderRow');
@@ -1718,7 +1719,6 @@
                 days.push(d);
             }
 
-            // Render headers
             headerRow.innerHTML = `<th class="py-3 px-3 w-48 text-left">Công Việc</th>` + days.map(d => {
                 const dayName = d.toLocaleDateString('vi-VN', { weekday: 'short' });
                 const dateStr = `${d.getDate()}/${d.getMonth() + 1}`;
@@ -1767,7 +1767,7 @@
         }
 
         // -------------------------------------------------------------
-        // EMPLOYEES & SETTINGS
+        // EMPLOYEES & SETTINGS (EMAIL IS OPTIONAL)
         // -------------------------------------------------------------
         function renderEmployees() {
             const grid = document.getElementById('employeeGrid');
@@ -1778,25 +1778,27 @@
                     <div class="col-span-full text-center py-12 text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200 p-8">
                         <i data-lucide="user-x" class="w-12 h-12 mx-auto mb-2 text-slate-300"></i>
                         <p class="font-medium text-slate-700">Chưa có nhân sự nào trong danh sách</p>
-                        <p class="text-xs text-slate-500 mt-1">Bấm "Thêm Nhân Sự Mới" hoặc "Đồng Bộ Sheet" để nạp danh sách.</p>
+                        <p class="text-xs text-slate-500 mt-1">Bấm "Thêm Nhân Sự Mới" hoặc nhập tên vào sheet NhanSu rồi bấm Đồng Bộ Sheet.</p>
                     </div>
                 `;
                 return;
             }
 
+            const defaultMail = appState.settings.smtp_email || 'tttai.mitsubishi.bth@gmail.com';
+
             grid.innerHTML = appState.employees.map(emp => {
                 const initial = emp.name.charAt(0).toUpperCase();
-                const isPrimary = emp.email === 'taitran.1493@gmail.com';
+                const displayEmail = emp.email || defaultMail;
+                const isDefaultMail = (!emp.email || emp.email === defaultMail);
 
                 return `
-                    <div class="bg-white rounded-2xl border ${isPrimary ? 'border-blue-400 ring-2 ring-blue-100' : 'border-slate-200'} p-5 shadow-sm space-y-4 flex flex-col justify-between">
+                    <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4 flex flex-col justify-between">
                         <div class="space-y-3">
                             <div class="flex items-start justify-between gap-2">
                                 <div class="w-11 h-11 rounded-xl flex items-center justify-center font-bold text-white text-base shadow-sm" style="background-color: ${emp.color || '#2563EB'};">
                                     ${initial}
                                 </div>
                                 <div class="flex items-center gap-1">
-                                    ${isPrimary ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Mail Chính</span>' : ''}
                                     <button onclick="openEditEmployeeModal(${emp.id})" title="Sửa thông tin" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 border border-slate-200">
                                         <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
                                     </button>
@@ -1808,19 +1810,20 @@
 
                             <div>
                                 <h4 class="font-bold text-slate-900 text-sm">${escapeHtml(emp.name)}</h4>
-                                <p class="text-xs text-blue-600 font-medium flex items-center gap-1 mt-0.5 truncate" title="${emp.email}">
-                                    <i data-lucide="mail" class="w-3 h-3 shrink-0"></i>
-                                    <span>${escapeHtml(emp.email)}</span>
+                                <p class="text-xs text-slate-500 flex items-center gap-1 mt-0.5 truncate" title="${displayEmail}">
+                                    <i data-lucide="mail" class="w-3 h-3 shrink-0 text-blue-600"></i>
+                                    <span class="font-mono text-[11px]">${escapeHtml(displayEmail)}</span>
                                 </p>
+                                ${isDefaultMail ? '<span class="text-[9px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 inline-block mt-1">Dùng mail mặc định</span>' : ''}
                             </div>
 
                             <div class="flex flex-wrap gap-1.5 text-[11px]">
-                                <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-medium">${emp.role || 'Nhân viên'}</span>
-                                <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">${emp.department || 'Mitsubishi BTH'}</span>
+                                <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-medium">${emp.role || 'Chuyên viên kinh doanh'}</span>
+                                <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">${emp.department || 'Phòng Kinh Doanh'}</span>
                             </div>
                         </div>
 
-                        <button onclick="testEmployeeEmailDirect('${emp.email}', '${escapeHtml(emp.name)}')" class="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs flex items-center justify-center gap-1.5 transition-all">
+                        <button onclick="testEmployeeEmailDirect('${displayEmail}', '${escapeHtml(emp.name)}')" class="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs flex items-center justify-center gap-1.5 transition-all">
                             <i data-lucide="send" class="w-3.5 h-3.5 text-blue-600"></i>
                             <span>Gửi Thử Email Test</span>
                         </button>
@@ -1835,7 +1838,7 @@
 
             if (select) {
                 select.innerHTML = appState.employees.map(e => `
-                    <option value="${e.id}">${e.name} (${e.email})</option>
+                    <option value="${e.id}">${e.name} (${e.role || 'Phòng Kinh Doanh'})</option>
                 `).join('');
             }
 
@@ -1847,7 +1850,7 @@
                         <label class="flex items-center gap-2 p-1.5 hover:bg-slate-50 cursor-pointer rounded">
                             <input type="checkbox" name="rotation_member" value="${e.id}" checked class="rounded text-blue-600 focus:ring-blue-500 w-4 h-4">
                             <span class="font-semibold text-slate-800">${e.name}</span>
-                            <span class="text-slate-400 text-[10px]">(${e.role || 'Nhân viên'})</span>
+                            <span class="text-slate-400 text-[10px]">(${e.role || 'Phòng Kinh Doanh'})</span>
                         </label>
                     `).join('');
                 }
@@ -1878,18 +1881,18 @@
         }
 
         function testEmployeeEmailDirect(email, name) {
-            const dummyTask = { title: 'Kiểm tra hộp thư nhận việc', scheduled_time: 'Ngay bây giờ', description: 'Kiểm tra hoạt động gửi mail từ Mitsubishi BTH' };
-            const dummyAssignee = { name: name, email: email };
-            showToast(`Đang gửi email test tới ${name}...`, 'info');
+            const targetMail = email || appState.settings.smtp_email || 'tttai.mitsubishi.bth@gmail.com';
+            const dummyTask = { title: 'Kiểm tra hộp thư nhận việc', scheduled_time: 'Ngay bây giờ', description: 'Kiểm tra hoạt động gửi mail từ Phòng Kinh Doanh' };
+            const dummyAssignee = { name: name, email: targetMail };
+            showToast(`Đang gửi email test tới ${targetMail}...`, 'info');
             dispatchEmailViaWebhook(dummyTask, dummyAssignee);
-            showToast(`Đã gửi email test thành công tới ${email}!`, 'success');
+            showToast(`Đã gửi email test thành công tới ${targetMail}!`, 'success');
         }
 
         function renderSettingsForm() {
             const s = appState.settings;
-            document.getElementById('setting_smtp_email').value = s.smtp_email;
-            document.getElementById('setting_primary_recipient').value = s.primary_recipient;
-            document.getElementById('setting_sender_name').value = s.sender_name;
+            document.getElementById('setting_smtp_email').value = s.smtp_email || 'tttai.mitsubishi.bth@gmail.com';
+            document.getElementById('setting_sender_name').value = s.sender_name || 'Phòng Kinh Doanh - Nhắc Việc Tự Động';
             document.getElementById('setting_google_sheet_url').value = s.google_sheet_url;
             document.getElementById('setting_apps_script_url').value = s.apps_script_url;
             document.getElementById('setting_sound_enabled').value = s.sound_enabled || '1';
@@ -1899,7 +1902,7 @@
             e.preventDefault();
             const s = appState.settings;
             s.smtp_email = document.getElementById('setting_smtp_email').value.trim();
-            s.primary_recipient = document.getElementById('setting_primary_recipient').value.trim();
+            s.primary_recipient = s.smtp_email;
             s.sender_name = document.getElementById('setting_sender_name').value.trim();
             s.google_sheet_url = document.getElementById('setting_google_sheet_url').value.trim();
             s.apps_script_url = document.getElementById('setting_apps_script_url').value.trim();
@@ -1970,7 +1973,6 @@
             const mode = document.getElementById('taskForm_assignee_mode').value;
             const assigneeId = parseInt(document.getElementById('taskForm_assignee_id').value) || 1;
 
-            // Rotation pool
             const poolCheckboxes = document.querySelectorAll('input[name="rotation_member"]:checked');
             const rotationPool = Array.from(poolCheckboxes).map(cb => parseInt(cb.value));
 
@@ -2053,7 +2055,6 @@
 
             toggleAssigneeModeFields();
 
-            // Set checkboxes for rotation pool
             const pool = task.rotation_pool || [];
             document.querySelectorAll('input[name="rotation_member"]').forEach(cb => {
                 cb.checked = pool.includes(parseInt(cb.value));
@@ -2076,16 +2077,16 @@
         }
 
         // -------------------------------------------------------------
-        // EMPLOYEE OPERATIONS
+        // EMPLOYEE OPERATIONS (EMAIL IS OPTIONAL)
         // -------------------------------------------------------------
         function openEmployeeModal() {
             document.getElementById('empForm_id').value = '';
             document.getElementById('empForm_name').value = '';
             document.getElementById('empForm_email').value = '';
-            document.getElementById('empForm_role').value = '';
-            document.getElementById('empForm_department').value = 'Mitsubishi BTH';
+            document.getElementById('empForm_role').value = 'Chuyên viên kinh doanh';
+            document.getElementById('empForm_department').value = 'Phòng Kinh Doanh';
             document.getElementById('empForm_color').value = '#2563EB';
-            document.getElementById('employeeModalTitle').textContent = 'Thêm Nhân Sự Vào Danh Sách';
+            document.getElementById('employeeModalTitle').textContent = 'Thêm Nhân Sự Mới';
             document.getElementById('employeeModal').classList.remove('hidden');
             lucide.createIcons();
         }
@@ -2096,9 +2097,9 @@
 
             document.getElementById('empForm_id').value = emp.id;
             document.getElementById('empForm_name').value = emp.name;
-            document.getElementById('empForm_email').value = emp.email;
-            document.getElementById('empForm_role').value = emp.role || '';
-            document.getElementById('empForm_department').value = emp.department || 'Mitsubishi BTH';
+            document.getElementById('empForm_email').value = emp.email || '';
+            document.getElementById('empForm_role').value = emp.role || 'Chuyên viên kinh doanh';
+            document.getElementById('empForm_department').value = emp.department || 'Phòng Kinh Doanh';
             document.getElementById('empForm_color').value = emp.color || '#2563EB';
             document.getElementById('employeeModalTitle').textContent = 'Chỉnh Sửa Nhân Sự';
             document.getElementById('employeeModal').classList.remove('hidden');
@@ -2113,9 +2114,11 @@
             e.preventDefault();
             const id = document.getElementById('empForm_id').value;
             const name = document.getElementById('empForm_name').value.trim();
-            const email = document.getElementById('empForm_email').value.trim();
-            const role = document.getElementById('empForm_role').value.trim();
-            const dept = document.getElementById('empForm_department').value.trim();
+            // Optional email: fallback to default if blank
+            const defaultMail = appState.settings.smtp_email || 'tttai.mitsubishi.bth@gmail.com';
+            const email = document.getElementById('empForm_email').value.trim() || defaultMail;
+            const role = document.getElementById('empForm_role').value.trim() || 'Chuyên viên kinh doanh';
+            const dept = document.getElementById('empForm_department').value.trim() || 'Phòng Kinh Doanh';
             const color = document.getElementById('empForm_color').value;
 
             if (id) {
@@ -2157,8 +2160,8 @@
         // TEMPLATE MODAL & COPY ACTIONS
         // -------------------------------------------------------------
         const SHEET_TEMPLATES = {
-            employees: `Họ Và Tên\tEmail Nhận Thông Báo\tChức Vụ / Vai Trò\tPhòng Ban\tTrạng Thái\nTài Trần\ttaitran.1493@gmail.com\tQuản lý & Điều hành\tMitsubishi BTH\tHoạt động\nTrần Thị Mai\tmai.social@gmail.com\tChuyên viên Content Social\tMarketing\tHoạt động\nNguyễn Văn An\tan.contentlead@gmail.com\tContent Leader\tMarketing\tHoạt động`,
-            tasks: `Tiêu Đề Công Việc\tMô Tả Chi Tiết\tCa Làm Việc\tGiờ Nhắc\tNgười Thực Hiện / Cơ Chế\tMức Độ Ưu Tiên\tLặp Lại\tTrạng Thái\nĐăng bài Fanpage Mitsubishi\tChia sẻ tips lái xe an toàn và ưu đãi bảo dưỡng\tSáng\t09:00\tXoay vòng ngày\tCao\tHàng ngày\tChờ xử lý\nNhắc nộp Báo cáo cuối ngày\tTổng hợp số liệu khách hàng và tương tác gửi nhóm\tTối\t17:30\tTất cả\tKhẩn cấp\tHàng ngày\tChờ xử lý`,
+            employees: `Họ Và Tên\tEmail (Có thể để trống)\tChức Vụ / Vai Trò\tPhòng Ban\tTrạng Thái\nTài Trần\ttttai.mitsubishi.bth@gmail.com\tQuản lý điều hành\tPhòng Kinh Doanh\tHoạt động\nTrần Thị Mai\t\tChuyên viên kinh doanh\tPhòng Kinh Doanh\tHoạt động\nNguyễn Văn An\t\tChuyên viên kinh doanh\tPhòng Kinh Doanh\tHoạt động`,
+            tasks: `Tiêu Đề Công Việc\tMô Tả Chi Tiết\tCa Làm Việc\tGiờ Nhắc\tNgười Thực Hiện / Cơ Chế\tMức Độ Ưu Tiên\tLặp Lại\tTrạng Thái\nĐăng bài Fanpage Phòng Kinh Doanh\tChia sẻ bảng giá và chương trình khuyến mãi tháng\tSáng\t09:00\tXoay vòng ngày\tCao\tHàng ngày\tChờ xử lý\nNhắc nộp Báo cáo ngày\tTổng hợp số lượng khách hàng liên hệ và chốt đơn\tTối\t17:30\tTất cả\tKhẩn cấp\tHàng ngày\tChờ xử lý`,
             reports: `Thời Gian Gửi\tTên Công Việc\tNgười Nhận\tMail Nhận\tMail Gửi\tTrạng Thái\tThông Điệp`
         };
 
