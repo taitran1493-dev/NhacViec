@@ -85,14 +85,20 @@
                     <span class="hidden sm:inline" id="btnNotificationText">Bật Chuông Nhắc</span>
                 </button>
 
+                <!-- Save to Google Sheet Button -->
+                <button onclick="saveAllToGoogleSheets()" title="Lưu toàn bộ Công Việc & Nhân Sự vào các tab Google Sheet tương ứng" class="flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-md shadow-emerald-600/20 transition-all">
+                    <i data-lucide="cloud-upload" class="w-3.5 h-3.5"></i>
+                    <span>Lưu Vào Sheet</span>
+                </button>
+
                 <!-- Sync Google Sheet Button -->
-                <button onclick="syncFromGoogleSheets()" class="flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-md shadow-emerald-600/20 transition-all">
+                <button onclick="syncFromGoogleSheets()" title="Tải dữ liệu từ Google Sheet về máy" class="flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-md shadow-blue-600/20 transition-all">
                     <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-                    <span>Đồng Bộ Sheet</span>
+                    <span>Tải Từ Sheet</span>
                 </button>
 
                 <!-- New Task Button -->
-                <button onclick="openTaskModal()" class="flex items-center gap-1.5 px-3.5 py-1.5 sm:py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm shadow-md shadow-blue-500/25 transition-all">
+                <button onclick="openTaskModal()" class="flex items-center gap-1.5 px-3.5 py-1.5 sm:py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs sm:text-sm shadow-md shadow-indigo-500/25 transition-all">
                     <i data-lucide="plus-circle" class="w-4 h-4"></i>
                     <span>Thêm Công Việc</span>
                 </button>
@@ -149,13 +155,21 @@
 
                 <!-- Google Sheet Action Buttons -->
                 <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                    <button onclick="syncFromGoogleSheets()" class="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm flex items-center justify-center gap-1.5 transition-all">
+                    <button onclick="saveAllToGoogleSheets()" class="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/20 flex items-center justify-center gap-1.5 transition-all">
+                        <i data-lucide="cloud-upload" class="w-4 h-4"></i>
+                        <span>Lưu Vào Google Sheet</span>
+                    </button>
+                    <button onclick="syncFromGoogleSheets()" class="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm flex items-center justify-center gap-1.5 transition-all">
                         <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-                        <span>Đồng Bộ Sheet</span>
+                        <span>Tải Từ Sheet Về</span>
+                    </button>
+                    <button onclick="openAppsScriptModal()" class="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 text-xs font-semibold shadow-sm flex items-center justify-center gap-1.5 transition-all">
+                        <i data-lucide="code" class="w-3.5 h-3.5 text-indigo-600"></i>
+                        <span>Mã Script Ghi Sheet</span>
                     </button>
                     <button onclick="openSheetTemplateModal()" class="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-300 text-xs font-semibold shadow-sm flex items-center justify-center gap-1.5 transition-all">
                         <i data-lucide="copy" class="w-3.5 h-3.5 text-emerald-600"></i>
-                        <span>Xem Mẫu 3 Sheet</span>
+                        <span>Xem Mẫu Sheet</span>
                     </button>
                     <a id="btnOpenSheetLink" href="https://docs.google.com/spreadsheets/d/1UvZKWzGpycOIjFHcjrHonQoCuFOWIpqfE0Jdj4eeXbA/edit?usp=sharing" target="_blank" class="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold shadow-sm flex items-center justify-center gap-1.5 transition-all">
                         <i data-lucide="external-link" class="w-3.5 h-3.5 text-blue-600"></i>
@@ -176,9 +190,15 @@
                         * Nhân sự không cần nhập email riêng, thông báo sẽ gửi về hòm thư mặc định này
                     </span>
                 </div>
-                <div class="text-[11px] text-slate-500 flex items-center gap-1">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span>Tự động kiểm tra giờ nhắc mỗi 30s • Hỗ trợ xoay vòng nhân sự thông minh</span>
+                <div class="flex items-center gap-2">
+                    <span id="lastSyncStatusBadge" class="text-[11px] font-medium text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded border border-emerald-200 flex items-center gap-1">
+                        <i data-lucide="cloud" class="w-3 h-3 text-emerald-600"></i>
+                        <span>Trạng thái: Sẵn sàng lưu 2 chiều</span>
+                    </span>
+                    <div class="text-[11px] text-slate-500 hidden lg:flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span>Kiểm tra giờ nhắc mỗi 30s</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -407,6 +427,24 @@
                 </div>
             </div>
 
+            <!-- Action Bar for Sheet Sync -->
+            <div class="bg-blue-50/80 p-3.5 rounded-xl border border-blue-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div class="flex items-center gap-2 text-xs text-blue-900 font-medium">
+                    <i data-lucide="database" class="w-4 h-4 text-blue-600 shrink-0"></i>
+                    <span>Dữ liệu tab này tương ứng với sheet <strong>Danh Sach Cong Viec</strong> trên Google Sheet:</span>
+                </div>
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <button onclick="saveTasksToGoogleSheet()" class="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-sm flex items-center justify-center gap-1.5 transition-all">
+                        <i data-lucide="cloud-upload" class="w-3.5 h-3.5"></i>
+                        <span>Lưu Công Việc Vào Sheet</span>
+                    </button>
+                    <button onclick="syncFromGoogleSheets()" class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg bg-white hover:bg-blue-100 text-blue-800 border border-blue-300 font-semibold text-xs flex items-center justify-center gap-1.5 transition-all">
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-blue-600"></i>
+                        <span>Tải Từ Sheet</span>
+                    </button>
+                </div>
+            </div>
+
             <!-- Tasks Table -->
             <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
@@ -446,9 +484,13 @@
                     </p>
                 </div>
                 <div class="flex items-center gap-2">
+                    <button onclick="saveEmployeesToGoogleSheet()" class="px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-md shadow-emerald-600/20 flex items-center gap-1.5 transition-all">
+                        <i data-lucide="cloud-upload" class="w-3.5 h-3.5"></i>
+                        <span>Lưu Nhân Sự Vào Sheet</span>
+                    </button>
                     <button onclick="syncFromGoogleSheets()" class="px-3.5 py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-semibold text-xs flex items-center gap-1.5 transition-all">
                         <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-                        <span>Lấy Từ Google Sheet</span>
+                        <span>Tải Từ Sheet</span>
                     </button>
                     <button onclick="openEmployeeModal()" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs sm:text-sm shadow-md shadow-blue-500/20 flex items-center gap-1.5 transition-all">
                         <i data-lucide="user-plus" class="w-4 h-4"></i>
@@ -558,6 +600,16 @@
                                 </select>
                             </div>
 
+                            <div class="p-3.5 bg-emerald-50 rounded-xl border border-emerald-200 space-y-1">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" id="setting_auto_save_sheet" checked class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300">
+                                    <span class="text-xs font-bold text-emerald-900">Tự động lưu vào Google Sheet khi thêm / sửa / xóa</span>
+                                </label>
+                                <p class="text-[11px] text-emerald-700 pl-6">
+                                    Khi bật, mọi thao tác tạo mới hoặc chỉnh sửa công việc và nhân sự sẽ tự động gửi lệnh ghi vào Google Sheet.
+                                </p>
+                            </div>
+
                             <div class="pt-4 border-t border-slate-100 flex flex-wrap items-center gap-3">
                                 <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm shadow-md shadow-blue-500/20 transition-all">
                                     Lưu Cài Đặt
@@ -573,6 +625,26 @@
 
                 <!-- Column 2: Webhook Instructions (5 cols) -->
                 <div class="lg:col-span-5 space-y-4">
+                    <!-- Apps Script Code Notice Card -->
+                    <div class="bg-gradient-to-br from-indigo-900 to-slate-900 text-white p-5 rounded-2xl shadow-md border border-indigo-700/60 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2 text-indigo-300 font-bold text-sm">
+                                <i data-lucide="code" class="w-5 h-5 text-indigo-400"></i>
+                                <span>Kích Hoạt Ghi Vào Google Sheet</span>
+                            </div>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">Quan trọng</span>
+                        </div>
+                        <p class="text-xs text-indigo-100 leading-relaxed">
+                            Để Web App có thể ghi trực tiếp vào 2 sheet <strong>Danh Sach Cong Viec</strong> và <strong>NhanSu</strong>, bạn chỉ cần cập nhật mã nguồn <code>Code.gs</code> trong Google Apps Script của bạn:
+                        </p>
+                        <div class="pt-1 flex items-center gap-2">
+                            <button type="button" onclick="openAppsScriptModal()" class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-md shadow-indigo-600/30 flex items-center justify-center gap-1.5 transition-all">
+                                <i data-lucide="code" class="w-4 h-4"></i>
+                                <span>Xem & Copy Mã Google Apps Script</span>
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-6 rounded-2xl shadow-md border border-slate-700 space-y-3">
                         <div class="flex items-center gap-2 text-emerald-400 font-bold text-sm">
                             <i data-lucide="check-circle-2" class="w-5 h-5"></i>
@@ -670,6 +742,9 @@
                     </button>
                     <button onclick="switchTemplateTab('reports')" id="tmplTab-reports" class="px-4 py-2 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800">
                         3. BaoCao
+                    </button>
+                    <button onclick="switchTemplateTab('script')" id="tmplTab-script" class="px-4 py-2 text-xs font-bold border-b-2 border-transparent text-indigo-600 hover:text-indigo-800">
+                        4. Mã Apps Script (Code.gs)
                     </button>
                 </div>
 
@@ -899,7 +974,9 @@
                 google_sheet_url: 'https://docs.google.com/spreadsheets/d/1UvZKWzGpycOIjFHcjrHonQoCuFOWIpqfE0Jdj4eeXbA/edit?usp=sharing',
                 google_sheet_id: '1UvZKWzGpycOIjFHcjrHonQoCuFOWIpqfE0Jdj4eeXbA',
                 apps_script_url: 'https://script.google.com/macros/s/AKfycbwP2j1YvdVGwD__ArFRVHoWCMMzvN07weeEmat7YYpuUMITXGqtf0va4h1vLiUdLa9C/exec',
-                sound_enabled: '1'
+                sound_enabled: '1',
+                auto_save_sheet: true,
+                last_sheet_sync: null
             },
             employees: [
                 { id: 1, name: 'Tài Trần', email: 'tttai.mitsubishi.bth@gmail.com', role: 'Quản lý điều hành', department: 'Phòng Kinh Doanh', color: '#2563EB' }
@@ -944,6 +1021,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             initClock();
             renderAll();
+            updateLastSyncDisplay();
 
             // Run in-browser scheduler every 30 seconds
             setInterval(checkTaskReminders, 30000);
@@ -1107,6 +1185,413 @@
                 banner.classList.add('hidden');
             }
         }
+
+        // -------------------------------------------------------------
+        // GOOGLE APPS SCRIPT CODE (CODE.GS) CONSTANT
+        // -------------------------------------------------------------
+        const GOOGLE_APPS_SCRIPT_SOURCE = `/**
+ * =========================================================================
+ * GOOGLE APPS SCRIPT - HỆ THỐNG NHẮC VIỆC & PHÂN CÔNG PHÒNG KINH DOANH
+ * =========================================================================
+ * Webhook đa năng kết nối trực tiếp với giao diện Web online:
+ * 1. action: 'save_all'       -> Lưu đồng thời Công Việc vào "Danh Sach Cong Viec" và Nhân Sự vào "NhanSu"
+ * 2. action: 'save_tasks'     -> Lưu toàn bộ danh sách công việc vào tab "Danh Sach Cong Viec"
+ * 3. action: 'save_employees' -> Lưu toàn bộ danh sách nhân sự vào tab "NhanSu"
+ * 4. action: 'send_email'     -> Gửi email nhắc việc qua Gmail & tự động ghi log vào tab "BaoCao"
+ * 
+ * Hướng dẫn cài đặt / cập nhật:
+ * - Bước 1: Mở Google Sheet -> Menu "Tiện ích mở rộng" (Extensions) -> "Apps Script".
+ * - Bước 2: Dán toàn bộ mã nguồn này đè vào file Code.gs -> Bấm biểu tượng Lưu (Ctrl + S).
+ * - Bước 3: Bấm nút "Triển khai" (Deploy) ở góc trên bên phải -> "Quản lý bản triển khai" (Manage deployments).
+ * - Bước 4: Bấm biểu tượng Cây Bút Chì (Chỉnh sửa) -> Ở mục "Phiên bản" (Version), chọn "Phiên bản mới" (New version) -> Bấm "Triển khai" (Deploy).
+ *   (Đường link Webhook Exec của bạn sẽ giữ nguyên không thay đổi!)
+ * =========================================================================
+ */
+
+function doPost(e) {
+  try {
+    var contents = (e && e.postData && e.postData.contents) ? e.postData.contents : "{}";
+    var data = JSON.parse(contents);
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+    // =====================================================================
+    // 1. GỬI EMAIL THÔNG BÁO NHẮC VIỆC & GHI LOG VÀO SHEET "BaoCao"
+    // =====================================================================
+    if (data.action === 'send_email') {
+      var recipient = data.to || 'tttai.mitsubishi.bth@gmail.com';
+      var subject = data.subject || '🔔 [Phòng Kinh Doanh] Nhắc nhở công việc';
+      var bodyText = data.bodyText || '';
+      var htmlBody = data.htmlBody || '';
+
+      if (recipient) {
+        GmailApp.sendEmail(recipient, subject, bodyText, {
+          htmlBody: htmlBody,
+          name: 'Phòng Kinh Doanh - Nhắc Việc Tự Động'
+        });
+      }
+
+      // Tự động ghi nhật ký vào sheet BaoCao
+      var reportSheet = ss.getSheetByName('BaoCao');
+      if (!reportSheet) {
+        reportSheet = ss.insertSheet('BaoCao');
+      }
+      if (reportSheet.getLastRow() === 0) {
+        var reportHeaders = ['Thời gian gửi', 'Tiêu đề công việc', 'Người nhận', 'Email nhận', 'Hệ thống gửi', 'Trạng thái', 'Ghi chú'];
+        reportSheet.appendRow(reportHeaders);
+        reportSheet.getRange(1, 1, 1, reportHeaders.length)
+          .setFontWeight('bold')
+          .setBackground('#2563eb')
+          .setFontColor('#ffffff');
+      }
+
+      var nowStr = Utilities.formatDate(new Date(), "GMT+7", "dd/MM/yyyy HH:mm:ss");
+      reportSheet.appendRow([
+        nowStr,
+        data.taskTitle || '',
+        data.recipientName || '',
+        recipient,
+        Session.getActiveUser().getEmail(),
+        'Thành công',
+        'Đã gửi qua Gmail Webhook'
+      ]);
+
+      return ContentService.createTextOutput(JSON.stringify({
+        success: true,
+        message: 'Đã gửi email nhắc việc thành công!'
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // =====================================================================
+    // 2. LƯU CÔNG VIỆC VÀO SHEET "Danh Sach Cong Viec"
+    // =====================================================================
+    if (data.action === 'save_tasks' || data.action === 'save_all') {
+      var taskSheet = ss.getSheetByName('Danh Sach Cong Viec');
+      if (!taskSheet) {
+        taskSheet = ss.insertSheet('Danh Sach Cong Viec');
+      }
+
+      var taskHeaders = [
+        'Tiêu đề công việc',
+        'Mô tả chi tiết',
+        'Khung giờ',
+        'Giờ nhắc cụ thể',
+        'Người / Phân bổ phụ trách',
+        'Độ ưu tiên',
+        'Chế độ phân bổ',
+        'Trạng thái',
+        'Cập nhật lúc'
+      ];
+
+      // Xóa trắng bảng cũ để đồng bộ 100% với giao diện người dùng
+      taskSheet.clearContents();
+      taskSheet.getRange(1, 1, 1, taskHeaders.length).setValues([taskHeaders]);
+      taskSheet.getRange(1, 1, 1, taskHeaders.length)
+        .setFontWeight('bold')
+        .setBackground('#1d4ed8')
+        .setFontColor('#ffffff');
+
+      if (data.tasks && data.tasks.length > 0) {
+        var nowStr = Utilities.formatDate(new Date(), "GMT+7", "dd/MM/yyyy HH:mm:ss");
+        var taskRows = data.tasks.map(function(t) {
+          return [
+            t.title || '',
+            t.description || '',
+            t.slotName || t.slot || '',
+            t.scheduled_time || '',
+            t.assignee_label || t.assignee_name || '',
+            t.priorityName || t.priority || 'Bình thường',
+            t.modeName || t.assignee_mode || 'Cố định',
+            t.statusName || t.status || 'Chờ thực hiện',
+            nowStr
+          ];
+        });
+        taskSheet.getRange(2, 1, taskRows.length, taskHeaders.length).setValues(taskRows);
+        taskSheet.autoResizeColumns(1, taskHeaders.length);
+      }
+
+      if (data.action === 'save_tasks') {
+        return ContentService.createTextOutput(JSON.stringify({
+          success: true,
+          message: 'Đã lưu thành công ' + (data.tasks ? data.tasks.length : 0) + ' công việc vào sheet "Danh Sach Cong Viec"!'
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
+    // =====================================================================
+    // 3. LƯU NHÂN SỰ VÀO SHEET "NhanSu"
+    // =====================================================================
+    if (data.action === 'save_employees' || data.action === 'save_all') {
+      var empSheet = ss.getSheetByName('NhanSu');
+      if (!empSheet) {
+        empSheet = ss.insertSheet('NhanSu');
+      }
+
+      var empHeaders = [
+        'Họ và tên',
+        'Email nhận thông báo',
+        'Chức vụ',
+        'Phòng ban',
+        'Cập nhật lúc'
+      ];
+
+      empSheet.clearContents();
+      empSheet.getRange(1, 1, 1, empHeaders.length).setValues([empHeaders]);
+      empSheet.getRange(1, 1, 1, empHeaders.length)
+        .setFontWeight('bold')
+        .setBackground('#059669')
+        .setFontColor('#ffffff');
+
+      if (data.employees && data.employees.length > 0) {
+        var nowStr = Utilities.formatDate(new Date(), "GMT+7", "dd/MM/yyyy HH:mm:ss");
+        var empRows = data.employees.map(function(e) {
+          return [
+            e.name || '',
+            e.email || 'tttai.mitsubishi.bth@gmail.com',
+            e.role || 'Chuyên viên kinh doanh',
+            e.department || 'Phòng Kinh Doanh',
+            nowStr
+          ];
+        });
+        empSheet.getRange(2, 1, empRows.length, empHeaders.length).setValues(empRows);
+        empSheet.autoResizeColumns(1, empHeaders.length);
+      }
+
+      if (data.action === 'save_employees') {
+        return ContentService.createTextOutput(JSON.stringify({
+          success: true,
+          message: 'Đã lưu thành công ' + (data.employees ? data.employees.length : 0) + ' nhân sự vào sheet "NhanSu"!'
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
+    // =====================================================================
+    // 4. LƯU TẤT CẢ (save_all)
+    // =====================================================================
+    if (data.action === 'save_all') {
+      return ContentService.createTextOutput(JSON.stringify({
+        success: true,
+        message: 'Đã lưu thành công toàn bộ Công việc và Nhân sự vào các Sheet tương ứng!'
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      message: 'Lệnh đã nhận nhưng không có action phù hợp: ' + data.action
+    })).setMimeType(ContentService.MimeType.JSON);
+
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      error: error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  return ContentService.createTextOutput(JSON.stringify({
+    status: 'online',
+    system: 'Phòng Kinh Doanh - Hệ Thống Nhắc Việc & Phân Bổ',
+    timestamp: new Date()
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+`;
+
+        // -------------------------------------------------------------
+        // FORMAT DATA FOR GOOGLE SHEETS WRITE
+        // -------------------------------------------------------------
+        function formatTasksForSheet(tasks) {
+            const slotNames = { morning: 'Sáng', noon: 'Trưa', afternoon: 'Chiều', evening: 'Tối' };
+            const priorityNames = { urgent: 'Khẩn cấp', high: 'Ưu tiên cao', medium: 'Bình thường', low: 'Thấp' };
+            const modeNames = {
+                daily_rotation: 'Xoay vòng theo ngày',
+                weekly_rotation: 'Xoay vòng theo tuần',
+                shift_rotation: 'Xoay vòng theo ca',
+                broadcast: 'Nhắc tất cả nhân sự',
+                single: 'Cố định 1 người'
+            };
+            const statusNames = { completed: 'Đã hoàn thành', pending: 'Chờ thực hiện' };
+
+            return tasks.map(t => {
+                let assigneeLabel = '';
+                if (t.assignee_mode === 'broadcast') {
+                    assigneeLabel = 'Tất cả nhân sự';
+                } else if (t.assignee_mode === 'daily_rotation' || t.assignee_mode === 'weekly_rotation') {
+                    const names = (t.rotation_pool || [])
+                        .map(id => appState.employees.find(e => e.id === id)?.name)
+                        .filter(Boolean)
+                        .join(', ');
+                    assigneeLabel = `Xoay vòng: ${names || 'Toàn bộ nhân sự'}`;
+                } else {
+                    const emp = appState.employees.find(e => e.id === t.assignee_id);
+                    assigneeLabel = emp ? emp.name : 'Chưa gán';
+                }
+
+                return {
+                    title: t.title,
+                    description: t.description || '',
+                    slotName: slotNames[t.slot] || t.slot || 'Sáng',
+                    scheduled_time: t.scheduled_time || '09:00',
+                    assignee_label: assigneeLabel,
+                    priorityName: priorityNames[t.priority] || 'Bình thường',
+                    modeName: modeNames[t.assignee_mode] || 'Cố định',
+                    statusName: statusNames[t.status] || 'Chờ thực hiện'
+                };
+            });
+        }
+
+        function formatEmployeesForSheet(employees) {
+            const defaultEmail = appState.settings.smtp_email || 'tttai.mitsubishi.bth@gmail.com';
+            return employees.map(e => ({
+                name: e.name,
+                email: e.email || defaultEmail,
+                role: e.role || 'Chuyên viên kinh doanh',
+                department: e.department || 'Phòng Kinh Doanh'
+            }));
+        }
+
+        function updateLastSyncDisplay() {
+            const badge = document.getElementById('lastSyncStatusBadge');
+            if (badge) {
+                const timeStr = appState.settings.last_sheet_sync || new Date().toLocaleTimeString('vi-VN', { hour12: false });
+                badge.innerHTML = `<i data-lucide="check" class="w-3 h-3 text-emerald-600"></i><span>Đã lưu lên Sheet: <strong>${timeStr}</strong></span>`;
+                lucide.createIcons();
+            }
+        }
+
+        // -------------------------------------------------------------
+        // SAVE ACTIONS (TWO-WAY SYNC TO GOOGLE SHEETS)
+        // -------------------------------------------------------------
+        async function saveAllToGoogleSheets(silent = false) {
+            const webhookUrl = appState.settings.apps_script_url.trim();
+            if (!webhookUrl) {
+                showToast('Chưa có link Google Apps Script Webhook! Vui lòng cấu hình trong Cài Đặt.', 'error');
+                return;
+            }
+
+            if (!silent) showToast('Đang lưu Công Việc & Nhân Sự vào Google Sheet...', 'info');
+
+            const payload = {
+                action: 'save_all',
+                tasks: formatTasksForSheet(appState.tasks),
+                employees: formatEmployeesForSheet(appState.employees)
+            };
+
+            try {
+                await fetch(webhookUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                appState.settings.last_sheet_sync = new Date().toLocaleTimeString('vi-VN', { hour12: false });
+                saveState();
+                updateLastSyncDisplay();
+
+                showToast(`✓ Đã lưu ${appState.tasks.length} việc vào "Danh Sach Cong Viec" và ${appState.employees.length} nhân sự vào "NhanSu"!`, 'success');
+                addLogEntry('Lưu vào Google Sheet', 'Hệ thống', 'Google Sheets', 'Thành công', `Đã lưu ${appState.tasks.length} việc và ${appState.employees.length} nhân sự vào 2 sheet tương ứng.`);
+            } catch (e) {
+                showToast('Lỗi khi lưu vào Google Sheet: ' + e.message, 'error');
+                addLogEntry('Lưu vào Google Sheet', 'Hệ thống', 'Google Sheets', 'Thất bại', 'Lỗi: ' + e.message);
+            }
+        }
+
+        async function saveTasksToGoogleSheet(silent = false) {
+            const webhookUrl = appState.settings.apps_script_url.trim();
+            if (!webhookUrl) {
+                showToast('Chưa có link Google Apps Script Webhook trong Cài Đặt!', 'error');
+                return;
+            }
+
+            if (!silent) showToast('Đang lưu danh sách công việc vào sheet "Danh Sach Cong Viec"...', 'info');
+
+            const payload = {
+                action: 'save_tasks',
+                tasks: formatTasksForSheet(appState.tasks)
+            };
+
+            try {
+                await fetch(webhookUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                appState.settings.last_sheet_sync = new Date().toLocaleTimeString('vi-VN', { hour12: false });
+                saveState();
+                updateLastSyncDisplay();
+
+                showToast(`✓ Đã lưu ${appState.tasks.length} công việc vào tab "Danh Sach Cong Viec"!`, 'success');
+                addLogEntry('Lưu công việc vào Sheet', 'Hệ thống', 'Danh Sach Cong Viec', 'Thành công', `Đã lưu ${appState.tasks.length} công việc lên Google Sheet.`);
+            } catch (e) {
+                showToast('Lỗi khi lưu công việc vào Google Sheet: ' + e.message, 'error');
+            }
+        }
+
+        async function saveEmployeesToGoogleSheet(silent = false) {
+            const webhookUrl = appState.settings.apps_script_url.trim();
+            if (!webhookUrl) {
+                showToast('Chưa có link Google Apps Script Webhook trong Cài Đặt!', 'error');
+                return;
+            }
+
+            if (!silent) showToast('Đang lưu danh sách nhân sự vào sheet "NhanSu"...', 'info');
+
+            const payload = {
+                action: 'save_employees',
+                employees: formatEmployeesForSheet(appState.employees)
+            };
+
+            try {
+                await fetch(webhookUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                appState.settings.last_sheet_sync = new Date().toLocaleTimeString('vi-VN', { hour12: false });
+                saveState();
+                updateLastSyncDisplay();
+
+                showToast(`✓ Đã lưu ${appState.employees.length} nhân sự vào tab "NhanSu"!`, 'success');
+                addLogEntry('Lưu nhân sự vào Sheet', 'Hệ thống', 'NhanSu', 'Thành công', `Đã lưu ${appState.employees.length} nhân sự lên Google Sheet.`);
+            } catch (e) {
+                showToast('Lỗi khi lưu nhân sự vào Google Sheet: ' + e.message, 'error');
+            }
+        }
+
+        // -------------------------------------------------------------
+        // APPS SCRIPT MODAL CONTROLS
+        // -------------------------------------------------------------
+        function openAppsScriptModal() {
+            const modal = document.getElementById('appsScriptModal');
+            const box = document.getElementById('appsScriptCodeBox');
+            if (box) box.value = GOOGLE_APPS_SCRIPT_SOURCE;
+            if (modal) modal.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeAppsScriptModal() {
+            const modal = document.getElementById('appsScriptModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function copyAppsScriptCode() {
+            const box = document.getElementById('appsScriptCodeBox');
+            if (!box) return;
+            box.select();
+            navigator.clipboard.writeText(box.value).then(() => {
+                const label = document.getElementById('btnCopyScriptLabel');
+                if (label) label.textContent = 'Đã Sao Chép Toàn Bộ Mã!';
+                showToast('✓ Đã sao chép toàn bộ mã Code.gs! Mở Google Apps Script và dán đè vào file Code.gs.', 'success');
+                setTimeout(() => { if (label) label.textContent = 'Sao Chép Mã Apps Script'; }, 2500);
+            }).catch(() => {
+                showToast('Hãy nhấn Ctrl + C để sao chép mã.', 'warning');
+            });
+        }
+
 
         // -------------------------------------------------------------
         // GOOGLE SHEETS LIVE SYNC (GVIZ API - TỰ ĐỘNG LẤY NHÂN SỰ)
@@ -1896,6 +2381,8 @@
             document.getElementById('setting_google_sheet_url').value = s.google_sheet_url;
             document.getElementById('setting_apps_script_url').value = s.apps_script_url;
             document.getElementById('setting_sound_enabled').value = s.sound_enabled || '1';
+            const autoSaveEl = document.getElementById('setting_auto_save_sheet');
+            if (autoSaveEl) autoSaveEl.checked = s.auto_save_sheet !== false;
         }
 
         function saveSettings(e) {
@@ -1907,6 +2394,8 @@
             s.google_sheet_url = document.getElementById('setting_google_sheet_url').value.trim();
             s.apps_script_url = document.getElementById('setting_apps_script_url').value.trim();
             s.sound_enabled = document.getElementById('setting_sound_enabled').value;
+            const autoSaveEl = document.getElementById('setting_auto_save_sheet');
+            s.auto_save_sheet = autoSaveEl ? autoSaveEl.checked : true;
 
             const match = s.google_sheet_url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
             if (match) s.google_sheet_id = match[1];
@@ -2009,6 +2498,10 @@
             saveState();
             closeTaskModal();
             renderAll();
+
+            if (appState.settings.auto_save_sheet !== false) {
+                saveTasksToGoogleSheet(true);
+            }
         }
 
         function deleteTask(taskId) {
@@ -2017,6 +2510,10 @@
             saveState();
             renderAll();
             showToast('Đã xóa công việc.', 'success');
+
+            if (appState.settings.auto_save_sheet !== false) {
+                saveTasksToGoogleSheet(true);
+            }
         }
 
         function openTaskModal() {
@@ -2146,6 +2643,10 @@
             saveState();
             closeEmployeeModal();
             renderAll();
+
+            if (appState.settings.auto_save_sheet !== false) {
+                saveEmployeesToGoogleSheet(true);
+            }
         }
 
         function deleteEmployee(empId) {
@@ -2154,6 +2655,10 @@
             saveState();
             renderAll();
             showToast('Đã xóa nhân sự.', 'success');
+
+            if (appState.settings.auto_save_sheet !== false) {
+                saveEmployeesToGoogleSheet(true);
+            }
         }
 
         // -------------------------------------------------------------
@@ -2162,7 +2667,8 @@
         const SHEET_TEMPLATES = {
             employees: `Họ Và Tên\tEmail (Có thể để trống)\tChức Vụ / Vai Trò\tPhòng Ban\tTrạng Thái\nTài Trần\ttttai.mitsubishi.bth@gmail.com\tQuản lý điều hành\tPhòng Kinh Doanh\tHoạt động\nTrần Thị Mai\t\tChuyên viên kinh doanh\tPhòng Kinh Doanh\tHoạt động\nNguyễn Văn An\t\tChuyên viên kinh doanh\tPhòng Kinh Doanh\tHoạt động`,
             tasks: `Tiêu Đề Công Việc\tMô Tả Chi Tiết\tCa Làm Việc\tGiờ Nhắc\tNgười Thực Hiện / Cơ Chế\tMức Độ Ưu Tiên\tLặp Lại\tTrạng Thái\nĐăng bài Fanpage Phòng Kinh Doanh\tChia sẻ bảng giá và chương trình khuyến mãi tháng\tSáng\t09:00\tXoay vòng ngày\tCao\tHàng ngày\tChờ xử lý\nNhắc nộp Báo cáo ngày\tTổng hợp số lượng khách hàng liên hệ và chốt đơn\tTối\t17:30\tTất cả\tKhẩn cấp\tHàng ngày\tChờ xử lý`,
-            reports: `Thời Gian Gửi\tTên Công Việc\tNgười Nhận\tMail Nhận\tMail Gửi\tTrạng Thái\tThông Điệp`
+            reports: `Thời Gian Gửi\tTên Công Việc\tNgười Nhận\tMail Nhận\tMail Gửi\tTrạng Thái\tThông Điệp`,
+            script: GOOGLE_APPS_SCRIPT_SOURCE
         };
 
         function openSheetTemplateModal() {
@@ -2177,16 +2683,22 @@
 
         function switchTemplateTab(tabKey) {
             currentTemplateTab = tabKey;
-            ['employees', 'tasks', 'reports'].forEach(k => {
+            ['employees', 'tasks', 'reports', 'script'].forEach(k => {
                 const btn = document.getElementById(`tmplTab-${k}`);
                 if (!btn) return;
-                btn.className = k === tabKey 
-                    ? 'px-4 py-2 text-xs font-bold border-b-2 border-emerald-600 text-emerald-700'
-                    : 'px-4 py-2 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800';
+                if (k === 'script') {
+                    btn.className = k === tabKey
+                        ? 'px-4 py-2 text-xs font-bold border-b-2 border-indigo-600 text-indigo-700'
+                        : 'px-4 py-2 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800';
+                } else {
+                    btn.className = k === tabKey 
+                        ? 'px-4 py-2 text-xs font-bold border-b-2 border-emerald-600 text-emerald-700'
+                        : 'px-4 py-2 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800';
+                }
             });
 
             const box = document.getElementById('templateContentBox');
-            if (box) box.value = SHEET_TEMPLATES[tabKey];
+            if (box) box.value = SHEET_TEMPLATES[tabKey] || '';
         }
 
         function copyTemplateToClipboard() {
