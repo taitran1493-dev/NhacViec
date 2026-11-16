@@ -1,83 +1,41 @@
-# 🚀 Hướng Dẫn Đưa Lên GitHub & Chạy Online Miễn Phí (GitHub Pages)
+# 🚀 Hướng Dẫn Đưa Lên GitHub & Sử Dụng Tool Nhắc Việc Online (Mitsubishi BTH)
 
-Tệp `index.html` đã được xây dựng thành **một file duy nhất (Standalone Single-File Web App)**, không cần cài đặt Python hay máy chủ. Bạn chỉ cần tải file này lên GitHub là có thể truy cập từ điện thoại, máy tính hoặc bất kỳ đâu 24/7!
+File `index.html` đã được xây dựng thành **một file duy nhất (Standalone Single-File Web App)** với đầy đủ các tính năng phân bổ nhân sự, xoay vòng ca và tự động gửi email thông qua Webhook Exec Google Apps Script của bạn.
 
 ---
 
-## 📌 Bước 1: Tải file lên GitHub
+## 🌟 Điểm Cải Tiến & Tính Năng Cốt Lõi Mới
 
-### Cách 1: Thao tác trực tiếp trên giao diện web GitHub (Dễ nhất - Không cần cài Git)
-1. Đăng nhập vào [GitHub.com](https://github.com) và tạo một kho lưu trữ mới (Repository), ví dụ đặt tên là: `task-reminder`
-2. Chọn chế độ **Public**.
-3. Tại trang Repository vừa tạo, bấm **"uploading an existing file"** (hoặc kéo thả).
-4. Kéo thả file `index.html` từ máy tính:
+1. **Không còn công việc mẫu bị gán cứng**:
+   - Giao diện sạch sẽ, bắt đầu với các tùy chọn do bạn thêm vào hoặc đồng bộ trực tiếp từ Google Sheet.
+2. **Cơ chế phân bổ nhân sự đa dạng**:
+   - 🔄 **Xoay vòng theo Ngày (Daily Rotation)**: Chọn danh sách nhân sự (ví dụ: An, Bình, Châu) -> Mỗi ngày hệ thống tự động giao cho 1 bạn phụ trách xoay vòng (hỗ trợ cả 3 ca Sáng, Trưa, Chiều trong ngày).
+   - 🔄 **Xoay vòng theo Tuần (Weekly Rotation)**: Mỗi tuần 1 bạn phụ trách.
+   - ⏱️ **Xoay vòng theo Ca (Shift Rotation)**: Ca Sáng bạn A, Ca Trưa bạn B, Ca Chiều bạn C.
+   - 📢 **Nhắc TẤT CẢ nhân sự (Broadcast)**: Gửi thông báo đồng loạt tới mọi thành viên (phù hợp cho: "Báo cáo cuối ngày", "Họp tuần"...).
+   - 👤 **Chỉ định cố định**: Giao cố định cho 1 nhân sự cụ thể.
+3. **Phát hiện trùng lịch & Trùng nhân sự (Conflict Detection)**:
+   - Tự động kiểm tra và gắn cờ cảnh báo màu đỏ nếu 1 nhân sự bị giao từ 2 việc trở lên trong cùng 1 khung giờ, giúp quản lý không bị phân công chồng chéo.
+4. **Ma trận phân bổ 7 ngày (Schedule Matrix)**:
+   - Bảng trực quan thể hiện lịch phân công trong 7 ngày tới (Thứ 2 đến Chủ Nhật), nhìn vào là biết ai trực ngày nào, ca nào.
+5. **Cảnh báo khi Sheet `NhanSu` chưa có dữ liệu**:
+   - Tự động phát hiện nếu sheet `NhanSu` còn trống và hiển thị thông báo yêu cầu nhập nhân sự kèm nút bấm sao chép mẫu cột vào Google Sheet.
+6. **Đã tích hợp sẵn Webhook Exec của bạn**:
+   - `https://script.google.com/macros/s/AKfycbwP2j1YvdVGwD__ArFRVHoWCMMzvN07weeEmat7YYpuUMITXGqtf0va4h1vLiUdLa9C/exec`
+   - Mail gửi: `tttai.mitsubishi.bth@gmail.com`
+   - Mail nhận chính: `taitran.1493@gmail.com`
+   - Tự động ghi nhật ký vào sheet `BaoCao`.
+
+---
+
+## 📌 Cách đưa lên GitHub & Chạy Online trong 1 phút
+
+1. Đăng nhập [GitHub.com](https://github.com) > Tạo Repository mới (chế độ **Public**).
+2. Bấm **"uploading an existing file"** > Kéo thả file `index.html` từ:
    `C:\Users\PC\.gemini\antigravity\scratch\task-reminder-hub\index.html` vào GitHub.
-5. Bấm nút màu xanh **"Commit changes"**.
-
-### Cách 2: Bằng dòng lệnh Git (Nếu máy đã cài Git)
-```bash
-cd "C:\Users\PC\.gemini\antigravity\scratch\task-reminder-hub"
-git init
-git add index.html
-git commit -m "Khoi tao Task Reminder online"
-git branch -M main
-git remote add origin https://github.com/<tai-khoan-cua-ban>/task-reminder.git
-git push -u origin main
-```
-
----
-
-## 📌 Bước 2: Bật tính năng GitHub Pages (Để lấy link chạy Online)
-
-1. Trên trang Repository GitHub của bạn, bấm vào tab **Settings** (Cài đặt) ở góc phải trên.
-2. Ở thanh bên trái, tìm và bấm vào mục **Pages**.
-3. Tại phần **Build and deployment**:
-   - **Source**: Chọn `Deploy from a branch`.
-   - **Branch**: Chọn nhánh `main` (hoặc `master`), thư mục giữ nguyên là `/ (root)`.
-4. Bấm **Save**.
-5. Đợi khoảng 30 - 60 giây, GitHub sẽ cấp cho bạn một đường link online có dạng:  
-   👉 **`https://<ten-tai-khoan>.github.io/task-reminder/`**
-
----
-
-## 📌 Bước 3: Kích hoạt gửi Gmail tự động 100% qua Google Apps Script (2 Phút)
-
-Vì chạy online trên GitHub (không có server riêng), bạn có thể dùng tính năng **Google Apps Script** có sẵn ngay trong Google Sheet của bạn để tự động gửi email từ tài khoản `tttai.mitsubishi.bth@gmail.com`:
-
-1. Mở file Google Sheet của bạn: [https://docs.google.com/spreadsheets/d/1UvZKWzGpycOIjFHcjrHonQoCuFOWIpqfE0Jdj4eeXbA/edit](https://docs.google.com/spreadsheets/d/1UvZKWzGpycOIjFHcjrHonQoCuFOWIpqfE0Jdj4eeXbA/edit)
-2. Trên thanh menu chọn: **Tiện ích mở rộng (Extensions)** &gt; **Apps Script**.
-3. Xóa toàn bộ mã mặc định và dán đoạn mã sau vào:
-
-```javascript
-function doPost(e) {
-  try {
-    var data = JSON.parse(e.postData.contents);
-    if (data.action === 'send_email') {
-      GmailApp.sendEmail(data.to, data.subject, data.bodyText, {
-        htmlBody: data.htmlBody,
-        name: 'Mitsubishi BTH - Nhắc Việc Tự Động'
-      });
-      
-      // Tự động ghi log vào sheet BaoCao
-      var ss = SpreadsheetApp.getActiveSpreadsheet();
-      var reportSheet = ss.getSheetByName('BaoCao');
-      if (reportSheet) {
-        reportSheet.appendRow([new Date(), data.taskTitle, data.recipientName, data.to, Session.getActiveUser().getEmail(), 'Thành công', 'Đã gửi qua Gmail']);
-      }
-      return ContentService.createTextOutput(JSON.stringify({success: true, message: 'Đã gửi email thành công!'})).setMimeType(ContentService.MimeType.JSON);
-    }
-  } catch(err) {
-    return ContentService.createTextOutput(JSON.stringify({success: false, error: err.toString()})).setMimeType(ContentService.MimeType.JSON);
-  }
-}
-```
-
-4. Bấm biểu tượng 💾 **Lưu (Save)**.
-5. Bấm nút màu xanh **Triển khai (Deploy)** ở góc trên bên phải &gt; chọn **Triển khai mới (New deployment)**:
-   - Chọn loại: **Ứng dụng web (Web app)** (bấm biểu tượng bánh răng cạnh 'Select type').
-   - **Thực thi dưới dạng (Execute as)**: `Tôi (Me - tttai.mitsubishi.bth@gmail.com)`.
-   - **Ai có quyền truy cập (Who has access)**: **`Bất kỳ ai (Anyone)`** *(rất quan trọng)*.
-6. Bấm **Triển khai (Deploy)** &gt; Cấp quyền truy cập nếu Google hỏi &gt; Sao chép đường dẫn **URL ứng dụng web** (dạng `https://script.google.com/macros/s/.../exec`).
-7. Mở trang web GitHub Pages của bạn &gt; vào tab **Cấu Hình Gmail** &gt; dán link này vào ô **Google Apps Script Webhook URL** rồi bấm **Lưu Cài Đặt**.
-
-Từ đây, mọi thao tác nhắc việc trên web online sẽ **tự động gửi email thật từ Gmail của bạn** và **tự động ghi log vào sheet `BaoCao`** hoàn toàn tự động và miễn phí!
+3. Bấm **Commit changes**.
+4. Vào **Settings** của repository > chọn mục **Pages** ở thanh menu trái:
+   - **Branch**: Chọn `main` (hoặc `master`), thư mục giữ nguyên `/ (root)`.
+   - Bấm **Save**.
+5. Sau 30 giây, link online sẽ xuất hiện:
+   👉 **`https://<ten-tai-khoan>.github.io/<ten-repo>/`**
