@@ -2,18 +2,16 @@
  * =========================================================================
  * GOOGLE APPS SCRIPT - HỆ THỐNG NHẮC VIỆC & PHÂN CÔNG PHÒNG KINH DOANH
  * =========================================================================
- * Webhook đa năng kết nối trực tiếp với giao diện Web online:
+ * Webhook URL:
+ * https://script.google.com/macros/s/AKfycby1SKwkr2xx360aekZgE8tcYW_3t7WzJHcvfz1_6mwDgjZXlfziHi3ve-uX6gIZ1gEY/exec
+ * 
+ * Các chức năng:
  * 1. action: 'save_all'       -> Lưu đồng thời Công Việc vào "Danh Sach Cong Viec" và Nhân Sự vào "NhanSu"
  * 2. action: 'save_tasks'     -> Lưu toàn bộ danh sách công việc vào tab "Danh Sach Cong Viec"
  * 3. action: 'save_employees' -> Lưu toàn bộ danh sách nhân sự vào tab "NhanSu"
  * 4. action: 'send_email'     -> Gửi email nhắc việc qua Gmail & tự động ghi log vào tab "BaoCao"
  * 
- * Hướng dẫn cài đặt / cập nhật:
- * - Bước 1: Mở Google Sheet -> Menu "Tiện ích mở rộng" (Extensions) -> "Apps Script".
- * - Bước 2: Dán toàn bộ mã nguồn này đè vào file Code.gs -> Bấm biểu tượng Lưu (Ctrl + S).
- * - Bước 3: Bấm nút "Triển khai" (Deploy) ở góc trên bên phải -> "Quản lý bản triển khai" (Manage deployments).
- * - Bước 4: Bấm biểu tượng Cây Bút Chì (Chỉnh sửa) -> Ở mục "Phiên bản" (Version), chọn "Phiên bản mới" (New version) -> Bấm "Triển khai" (Deploy).
- *   (Đường link Webhook Exec của bạn sẽ giữ nguyên không thay đổi!)
+ * Hỗ trợ luân phiên: Lưu rõ người đang phụ trách hiện tại, người kế tiếp và toàn bộ thứ tự vòng xoay!
  * =========================================================================
  */
 
@@ -39,7 +37,6 @@ function doPost(e) {
         });
       }
 
-      // Tự động ghi nhật ký vào sheet BaoCao
       var reportSheet = ss.getSheetByName('BaoCao');
       if (!reportSheet) {
         reportSheet = ss.insertSheet('BaoCao');
@@ -84,14 +81,13 @@ function doPost(e) {
         'Mô tả chi tiết',
         'Khung giờ',
         'Giờ nhắc cụ thể',
-        'Người / Phân bổ phụ trách',
+        'Người phụ trách / Thứ tự luân phiên',
         'Độ ưu tiên',
         'Chế độ phân bổ',
         'Trạng thái',
         'Cập nhật lúc'
       ];
 
-      // Xóa trắng bảng cũ để đồng bộ 100% với giao diện người dùng
       taskSheet.clearContents();
       taskSheet.getRange(1, 1, 1, taskHeaders.length).setValues([taskHeaders]);
       taskSheet.getRange(1, 1, 1, taskHeaders.length)
@@ -199,7 +195,7 @@ function doPost(e) {
 function doGet(e) {
   return ContentService.createTextOutput(JSON.stringify({
     status: 'online',
-    system: 'Phòng Kinh Doanh - Hệ Thống Nhắc Việc & Phân Bổ',
+    system: 'Phòng Kinh Doanh TaskHub',
     timestamp: new Date()
   })).setMimeType(ContentService.MimeType.JSON);
 }
