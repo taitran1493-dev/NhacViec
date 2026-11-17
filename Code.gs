@@ -7,10 +7,10 @@
  * 
  * Các chức năng cốt lõi:
  * 1. doPost(e): Webhook nhận lệnh từ giao diện Web (save_all, save_tasks, save_employees, send_email).
+ *    - Có cơ chế BẢO VỆ DỮ LIỆU: Chặn ghi đè mảng rỗng khi mở từ trình duyệt/thiết bị mới chưa đồng bộ!
  * 2. autoCheckAndSendReminders(): HÀM TỰ ĐỘNG CHẠY 24/7 TRÊN GOOGLE CLOUD
  *    - Quét sheet "Danh Sach Cong Viec" và "NhanSu" mỗi 5-10 phút.
  *    - Đến đúng giờ cấu hình (09:00, 12:00, 16:30...), tự gửi Gmail cho người đến lượt.
- *    - Tắt máy tính, tắt trình duyệt vẫn tự động gửi 100%!
  * 3. setupAutoReminderTrigger(): Chạy hàm này 1 lần để kích hoạt lịch tự động 24/7!
  * =========================================================================
  */
@@ -68,7 +68,7 @@ function doPost(e) {
     }
 
     // =====================================================================
-    // 2. LƯU CÔNG VIỆC VÀO SHEET "Danh Sach Cong Viec"
+    // 2. LƯU CÔNG VIỆC VÀO SHEET "Danh Sach Cong Viec" (CÓ CHỐNG MẤT DỮ LIỆU)
     // =====================================================================
     if (data.action === 'save_tasks' || data.action === 'save_all') {
       var taskSheet = ss.getSheetByName('Danh Sach Cong Viec');
@@ -76,42 +76,50 @@ function doPost(e) {
         taskSheet = ss.insertSheet('Danh Sach Cong Viec');
       }
 
-      var taskHeaders = [
-        'Tiêu đề công việc',
-        'Mô tả chi tiết',
-        'Khung giờ',
-        'Giờ nhắc cụ thể',
-        'Người phụ trách / Thứ tự luân phiên',
-        'Độ ưu tiên',
-        'Chế độ phân bổ',
-        'Trạng thái',
-        'Cập nhật lúc'
-      ];
+      var hasIncomingTasks = (data.tasks && data.tasks.length > 0);
+      var allowEmptyTasks = (data.allowEmptyOverwrite === true);
 
-      taskSheet.clearContents();
-      taskSheet.getRange(1, 1, 1, taskHeaders.length).setValues([taskHeaders]);
-      taskSheet.getRange(1, 1, 1, taskHeaders.length)
-        .setFontWeight('bold')
-        .setBackground('#1d4ed8')
-        .setFontColor('#ffffff');
+      // Bảo vệ: Nếu thiết bị mới gửi mảng rỗng mà không có cờ xóa chủ đích, KHÔNG xóa dữ liệu đang có trên Sheet!
+      if (hasIncomingTasks || allowEmptyTasks || taskSheet.getLastRow() === 0) {
+        var taskHeaders = [
+          'Tiêu đề công việc',
+          'Mô tả chi tiết',
+          'Khung giờ',
+          'Giờ nhắc cụ thể',
+          'Người phụ trách / Thứ tự luân phiên',
+          'Độ ưu tiên',
+          'Chế độ phân bổ',
+          'Trạng thái',
+          'Cập nhật lúc'
+        ];
 
-      if (data.tasks && data.tasks.length > 0) {
-        var nowStr = Utilities.formatDate(new Date(), "GMT+7", "dd/MM/yyyy HH:mm:ss");
-        var taskRows = data.tasks.map(function(t) {
-          return [
-            t.title || '',
-            t.description || '',
-            t.slotName || t.slot || '',
-            t.scheduled_time || '',
-            t.assignee_label || t.assignee_name || '',
-            t.priorityName || t.priority || 'Bình thường',
-            t.modeName || t.assignee_mode || 'Cố định',
-            t.statusName || t.status || 'Chờ thực hiện',
-            nowStr
-          ];
-        });
-        taskSheet.getRange(2, 1, taskRows.length, taskHeaders.length).setValues(taskRows);
-        taskSheet.autoResizeColumns(1, taskHeaders.length);
+        taskSheet.clearContents();
+        taskSheet.getRange(1, 1, 1, taskHeaders.length).setValues([taskHeaders]);
+        taskSheet.getRange(1, 1, 1, taskHeaders.length)
+          .setFontWeight('bold')
+          .setBackground('#1d4ed8')
+          .setFontColor('#ffffff');
+
+        if (hasIncomingTasks) {
+          var nowStr = Utilities.formatDate(new Date(), "GMT+7", "dd/MM/yyyy HH:mm:ss");
+          var taskRows = data.tasks.map(function(t) {
+            return [
+              t.title || '',
+              t.description || '',
+              t.slotName || t.slot || '',
+              t.scheduled_time || '09:00',
+              t.assignee_label || t.assignee_name || '',
+              t.priorityName || t.priority || 'Bình thường',
+              t.modeName || t.assignee_mode || 'Cố định',
+              t.statusName || t.status || 'Chờ thực hiện',
+              nowStr
+            ];
+          });
+          // Định dạng cột Giờ nhắc (cột 4) là văn bản thuần để không bị đổi sang Date(1899...)
+          taskSheet.getRange(2, 4, taskRows.length, 1).setNumberFormat('@');
+          taskSheet.getRange(2, 1, taskRows.length, taskHeaders.length).setValues(taskRows);
+          taskSheet.autoResizeColumns(1, taskHeaders.length);
+        }
       }
 
       if (data.action === 'save_tasks') {
@@ -123,7 +131,7 @@ function doPost(e) {
     }
 
     // =====================================================================
-    // 3. LƯU NHÂN SỰ VÀO SHEET "NhanSu"
+    // 3. LƯU NHÂN SỰ VÀO SHEET "NhanSu" (CÓ CHỐNG MẤT DỮ LIỆU)
     // =====================================================================
     if (data.action === 'save_employees' || data.action === 'save_all') {
       var empSheet = ss.getSheetByName('NhanSu');
@@ -131,34 +139,40 @@ function doPost(e) {
         empSheet = ss.insertSheet('NhanSu');
       }
 
-      var empHeaders = [
-        'Họ và tên',
-        'Email nhận thông báo',
-        'Chức vụ',
-        'Phòng ban',
-        'Cập nhật lúc'
-      ];
+      var hasIncomingEmps = (data.employees && data.employees.length > 0);
+      var allowEmptyEmps = (data.allowEmptyOverwrite === true);
 
-      empSheet.clearContents();
-      empSheet.getRange(1, 1, 1, empHeaders.length).setValues([empHeaders]);
-      empSheet.getRange(1, 1, 1, empHeaders.length)
-        .setFontWeight('bold')
-        .setBackground('#059669')
-        .setFontColor('#ffffff');
+      // Bảo vệ: Nếu thiết bị mới gửi mảng rỗng mà không có cờ xóa chủ đích, KHÔNG xóa danh sách nhân sự đang có!
+      if (hasIncomingEmps || allowEmptyEmps || empSheet.getLastRow() === 0) {
+        var empHeaders = [
+          'Họ và tên',
+          'Email nhận thông báo',
+          'Chức vụ',
+          'Phòng ban',
+          'Cập nhật lúc'
+        ];
 
-      if (data.employees && data.employees.length > 0) {
-        var nowStr = Utilities.formatDate(new Date(), "GMT+7", "dd/MM/yyyy HH:mm:ss");
-        var empRows = data.employees.map(function(e) {
-          return [
-            e.name || '',
-            e.email || 'tttai.mitsubishi.bth@gmail.com',
-            e.role || 'Chuyên viên kinh doanh',
-            e.department || 'Phòng Kinh Doanh',
-            nowStr
-          ];
-        });
-        empSheet.getRange(2, 1, empRows.length, empHeaders.length).setValues(empRows);
-        empSheet.autoResizeColumns(1, empHeaders.length);
+        empSheet.clearContents();
+        empSheet.getRange(1, 1, 1, empHeaders.length).setValues([empHeaders]);
+        empSheet.getRange(1, 1, 1, empHeaders.length)
+          .setFontWeight('bold')
+          .setBackground('#059669')
+          .setFontColor('#ffffff');
+
+        if (hasIncomingEmps) {
+          var nowStr = Utilities.formatDate(new Date(), "GMT+7", "dd/MM/yyyy HH:mm:ss");
+          var empRows = data.employees.map(function(e) {
+            return [
+              e.name || '',
+              e.email || 'tttai.mitsubishi.bth@gmail.com',
+              e.role || 'Chuyên viên kinh doanh',
+              e.department || 'Phòng Kinh Doanh',
+              nowStr
+            ];
+          });
+          empSheet.getRange(2, 1, empRows.length, empHeaders.length).setValues(empRows);
+          empSheet.autoResizeColumns(1, empHeaders.length);
+        }
       }
 
       if (data.action === 'save_employees') {
@@ -203,10 +217,6 @@ function doGet(e) {
 // =========================================================================
 // 5. HÀM TỰ ĐỘNG QUÉT VÀ NHẮC VIỆC 24/7 TRÊN MÁY CHỦ GOOGLE
 // =========================================================================
-/**
- * Chạy tự động trên máy chủ Google hoàn toàn miễn phí, 24/7.
- * Không cần mở máy tính, không cần mở trình duyệt!
- */
 function autoCheckAndSendReminders() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var taskSheet = ss.getSheetByName('Danh Sach Cong Viec');
@@ -214,13 +224,13 @@ function autoCheckAndSendReminders() {
   var reportSheet = ss.getSheetByName('BaoCao');
   if (!taskSheet) return;
 
-  var taskData = taskSheet.getDataRange().getValues();
+  // Dùng getDisplayValues() để luôn lấy đúng chuỗi giờ "09:00", "17:30"
+  var taskData = taskSheet.getDataRange().getDisplayValues();
   if (taskData.length <= 1) return;
 
-  // Lấy danh sách nhân sự từ sheet NhanSu
   var employees = [];
   if (empSheet && empSheet.getLastRow() > 1) {
-    var empData = empSheet.getDataRange().getValues();
+    var empData = empSheet.getDataRange().getDisplayValues();
     for (var i = 1; i < empData.length; i++) {
       var row = empData[i];
       if (row[0]) {
@@ -258,7 +268,9 @@ function autoCheckAndSendReminders() {
     if (status.toLowerCase().includes('hoàn thành') || status.toLowerCase().includes('completed')) continue;
 
     var timeList = [];
-    if (timeStr.includes(',')) {
+    if (slot.toLowerCase().includes('3 ca') || slot.toLowerCase().includes('cả 3')) {
+      timeList = ['09:00', '12:00', '16:30'];
+    } else if (timeStr.includes(',')) {
       timeList = timeStr.split(',').map(function(s) { return s.trim(); });
     } else if (timeStr.includes(':')) {
       timeList = [timeStr];
@@ -278,7 +290,6 @@ function autoCheckAndSendReminders() {
       var targetTotalMinutes = targetH * 60 + targetM;
 
       var diffMinutes = currentTotalMinutes - targetTotalMinutes;
-      // Kích hoạt khi đến giờ hoặc trễ tối đa 11 phút (phù hợp với trigger chạy mỗi 10 phút)
       if (diffMinutes >= 0 && diffMinutes < 12) {
         var reminderKey = 'SENT_' + todayDateStr + '_' + title + '_' + targetTime;
         var alreadySent = scriptProps.getProperty(reminderKey);
@@ -364,10 +375,6 @@ function autoCheckAndSendReminders() {
   }
 }
 
-/**
- * HÀM CÀI ĐẶT LỊCH NHẮC TỰ ĐỘNG 24/7
- * Bấm chạy hàm này 1 lần duy nhất trong Apps Script là lịch kích hoạt vĩnh viễn!
- */
 function setupAutoReminderTrigger() {
   var allTriggers = ScriptApp.getProjectTriggers();
   for (var i = 0; i < allTriggers.length; i++) {

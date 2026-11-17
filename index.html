@@ -44,6 +44,26 @@
             transform: translateY(-2px);
             box-shadow: 0 10px 20px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
         }
+        html, body {
+            overflow-x: hidden;
+            max-width: 100vw;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .mobile-nav-btn.active {
+            color: #2563eb;
+            font-weight: 700;
+        }
+        .mobile-nav-btn.active .mobile-nav-indicator {
+            opacity: 1;
+            transform: scaleX(1);
+        }
+        @media (max-width: 640px) {
+            input[type="text"], input[type="email"], input[type="time"], select, textarea {
+                font-size: 16px !important;
+            }
+        }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
@@ -52,62 +72,65 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen antialiased flex flex-col">
 
-    <!-- Top Navigation Bar -->
+    <!-- Top Navigation Bar (Mobile & Desktop Responsive) -->
     <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-emerald-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
-                    <i data-lucide="bell-ring" class="w-5 h-5"></i>
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-0 sm:h-16 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-emerald-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 shrink-0">
+                    <i data-lucide="bell-ring" class="w-4 h-4 sm:w-5 sm:h-5"></i>
                 </div>
-                <div>
-                    <div class="flex items-center gap-2">
-                        <span class="font-bold text-slate-900 text-base sm:text-lg tracking-tight">Phòng Kinh Doanh TaskHub</span>
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                <div class="min-w-0">
+                    <div class="flex items-center gap-1.5 sm:gap-2">
+                        <span class="font-bold text-slate-900 text-sm sm:text-lg tracking-tight truncate">Phòng Kinh Doanh</span>
+                        <span class="text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1 shrink-0">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                            Online Active
+                            <span class="hidden xs:inline sm:inline">Online</span>
                         </span>
                     </div>
-                    <p class="text-xs text-slate-500 hidden sm:block">Phân bổ nhân sự xoay vòng & Gửi nhắc việc qua Gmail</p>
+                    <p class="text-[11px] text-slate-500 truncate hidden sm:block">Phân bổ nhân sự xoay vòng & Đồng bộ Google Sheet 2 chiều</p>
                 </div>
             </div>
 
             <!-- Server Status & Quick Actions -->
-            <div class="flex items-center gap-2 sm:gap-3">
+            <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
                 <!-- Clock -->
-                <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-xs font-medium text-slate-600">
+                <div class="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-xs font-medium text-slate-600">
                     <i data-lucide="clock" class="w-3.5 h-3.5 text-blue-600"></i>
                     <span id="liveClock">--:--:--</span>
                 </div>
 
                 <!-- Desktop Notification Button -->
-                <button onclick="requestNotificationPermission()" id="btnNotification" title="Bật thông báo màn hình & chuông nhắc việc" class="px-2.5 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-semibold flex items-center gap-1 transition-all">
-                    <i data-lucide="bell" class="w-3.5 h-3.5"></i>
-                    <span class="hidden sm:inline" id="btnNotificationText">Bật Chuông Nhắc</span>
-                </button>
-
-                <!-- Save to Google Sheet Button -->
-                <button onclick="saveAllToGoogleSheets()" title="Lưu toàn bộ Công Việc & Nhân Sự vào các tab Google Sheet tương ứng" class="flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-md shadow-emerald-600/20 transition-all">
-                    <i data-lucide="cloud-upload" class="w-3.5 h-3.5"></i>
-                    <span>Lưu Vào Sheet</span>
+                <button onclick="requestNotificationPermission()" id="btnNotification" title="Bật thông báo màn hình & chuông nhắc việc" class="p-2 sm:px-2.5 sm:py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-semibold flex items-center gap-1 transition-all">
+                    <i data-lucide="bell" class="w-4 h-4 sm:w-3.5 sm:h-3.5"></i>
+                    <span class="hidden md:inline" id="btnNotificationText">Bật Chuông</span>
                 </button>
 
                 <!-- Sync Google Sheet Button -->
-                <button onclick="syncFromGoogleSheets()" title="Tải dữ liệu từ Google Sheet về máy" class="flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-md shadow-blue-600/20 transition-all">
-                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-                    <span>Tải Từ Sheet</span>
+                <button onclick="syncFromGoogleSheets(false)" title="Tải dữ liệu mới nhất từ Google Sheet về máy" class="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-sm transition-all">
+                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5 shrink-0"></i>
+                    <span class="hidden sm:inline">Tải Từ Sheet</span>
+                    <span class="sm:hidden">Tải</span>
+                </button>
+
+                <!-- Save to Google Sheet Button -->
+                <button onclick="saveAllToGoogleSheets()" title="Lưu toàn bộ Công Việc & Nhân Sự vào Google Sheet" class="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-sm transition-all">
+                    <i data-lucide="cloud-upload" class="w-3.5 h-3.5 shrink-0"></i>
+                    <span class="hidden sm:inline">Lưu Vào Sheet</span>
+                    <span class="sm:hidden">Lưu</span>
                 </button>
 
                 <!-- New Task Button -->
-                <button onclick="openTaskModal()" class="flex items-center gap-1.5 px-3.5 py-1.5 sm:py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs sm:text-sm shadow-md shadow-indigo-500/25 transition-all">
-                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
-                    <span>Thêm Công Việc</span>
+                <button onclick="openTaskModal()" class="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs sm:text-sm shadow-md shadow-indigo-500/25 transition-all">
+                    <i data-lucide="plus-circle" class="w-4 h-4 shrink-0"></i>
+                    <span class="hidden sm:inline">Thêm Công Việc</span>
+                    <span class="sm:hidden">Thêm</span>
                 </button>
             </div>
         </div>
     </header>
 
     <!-- Main Container -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-5">
+    <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-5 pb-24 md:pb-8 space-y-4 sm:space-y-5">
 
         <!-- NO PERSONNEL WARNING BANNER (Shows if NhanSu has 0 members) -->
         <div id="noPersonnelBanner" class="hidden p-4 rounded-2xl border border-amber-300 bg-amber-50 text-amber-900 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-3 animate-in fade-in">
@@ -146,7 +169,7 @@
                             <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-200/80 text-emerald-900">Webhook Exec Sẵn Sàng</span>
                         </div>
                         <p class="text-xs text-slate-600 mt-0.5 flex flex-wrap items-center gap-2">
-                            <span>Mã Sheet: <strong class="font-mono text-slate-800" id="displaySheetId">1UvZKWzGpycOIjFHcjrHonQoCuFOWIpqfE0Jdj4eeXbA</strong></span>
+                            <span class="break-all">Mã Sheet: <strong class="font-mono text-slate-800 break-all" id="displaySheetId">1UvZKWzGpycOIjFHcjrHonQoCuFOWIpqfE0Jdj4eeXbA</strong></span>
                             <span class="text-slate-400">•</span>
                             <span class="text-emerald-700 font-medium">Tự động nạp nhân sự từ sheet NhanSu & Ghi báo cáo vào sheet BaoCao</span>
                         </p>
@@ -250,35 +273,38 @@
             </div>
         </div>
 
-        <!-- Tab Bar Navigation -->
-        <div class="bg-white rounded-xl border border-slate-200 p-1.5 flex flex-wrap items-center justify-between gap-2 shadow-sm">
-            <div class="flex items-center gap-1 sm:gap-2">
-                <button onclick="switchTab('today')" id="tabBtn-today" class="tab-btn active px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition-all">
-                    <i data-lucide="calendar" class="w-4 h-4"></i>
-                    <span>Lịch Hôm Nay (Phân Bổ Ca & Xoay Vòng)</span>
+        <!-- Tab Bar Navigation (Horizontally scrollable on mobile, wrapped on desktop) -->
+        <div class="bg-white rounded-xl border border-slate-200 p-1.5 flex flex-col lg:flex-row lg:items-center justify-between gap-2 shadow-sm">
+            <div class="flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar pb-0.5 sm:pb-0">
+                <button onclick="switchTab('today')" id="tabBtn-today" class="tab-btn active px-3 sm:px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-all">
+                    <i data-lucide="calendar" class="w-4 h-4 shrink-0"></i>
+                    <span>Lịch Hôm Nay</span>
                 </button>
-                <button onclick="switchTab('all')" id="tabBtn-all" class="tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1.5 transition-all">
-                    <i data-lucide="layers" class="w-4 h-4"></i>
-                    <span>Danh Sách & Thiết Lập Công Việc</span>
+                <button onclick="switchTab('all')" id="tabBtn-all" class="tab-btn px-3 sm:px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-all">
+                    <i data-lucide="layers" class="w-4 h-4 shrink-0"></i>
+                    <span>Tất Cả Công Việc</span>
                 </button>
-                <button onclick="switchTab('team')" id="tabBtn-team" class="tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1.5 transition-all">
-                    <i data-lucide="user-check" class="w-4 h-4"></i>
-                    <span>Danh Sách Nhân Sự (NhanSu)</span>
+                <button onclick="switchTab('team')" id="tabBtn-team" class="tab-btn px-3 sm:px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-all">
+                    <i data-lucide="user-check" class="w-4 h-4 shrink-0"></i>
+                    <span>Nhân Sự (<span id="tabTeamCount">0</span>)</span>
                 </button>
-                <button onclick="switchTab('matrix')" id="tabBtn-matrix" class="tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1.5 transition-all">
-                    <i data-lucide="calendar-range" class="w-4 h-4"></i>
-                    <span>Ma Trận Phân Bổ 7 Ngày</span>
+                <button onclick="switchTab('matrix')" id="tabBtn-matrix" class="tab-btn px-3 sm:px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-all">
+                    <i data-lucide="calendar-range" class="w-4 h-4 shrink-0"></i>
+                    <span>Lịch 7 Ngày</span>
                 </button>
-                <button onclick="switchTab('settings')" id="tabBtn-settings" class="tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1.5 transition-all">
-                    <i data-lucide="settings" class="w-4 h-4"></i>
-                    <span>Cấu Hình & Nhật Ký (BaoCao)</span>
+                <button onclick="switchTab('settings')" id="tabBtn-settings" class="tab-btn px-3 sm:px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-all">
+                    <i data-lucide="settings" class="w-4 h-4 shrink-0"></i>
+                    <span>Cấu Hình & Báo Cáo</span>
                 </button>
             </div>
 
             <!-- Date Label -->
-            <div class="text-xs font-semibold text-slate-500 px-3 py-1 flex items-center gap-1.5">
-                <i data-lucide="calendar-days" class="w-3.5 h-3.5 text-blue-600"></i>
-                <span id="currentDateDisplay">Hôm nay</span>
+            <div class="text-xs font-semibold text-slate-500 px-2.5 py-1 flex items-center justify-between lg:justify-end gap-1.5 border-t lg:border-t-0 border-slate-100 pt-1.5 lg:pt-1">
+                <div class="flex items-center gap-1.5">
+                    <i data-lucide="calendar-days" class="w-3.5 h-3.5 text-blue-600 shrink-0"></i>
+                    <span id="currentDateDisplay">Hôm nay</span>
+                </div>
+                <span class="text-[11px] text-emerald-700 font-semibold lg:hidden" id="mobileSyncMiniStatus">Đồng bộ đám mây</span>
             </div>
         </div>
 
@@ -384,12 +410,12 @@
 
             <!-- CA TỐI & NHIỆM VỤ KHÁC -->
             <div id="eveningSection" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                <div class="px-5 py-3.5 bg-slate-100/80 border-b border-slate-200 flex items-center justify-between">
-                    <div class="flex items-center gap-2 font-bold text-slate-800 text-sm">
+                <div class="px-4 sm:px-5 py-3.5 bg-slate-100/80 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-2 font-bold text-slate-800 text-xs sm:text-sm">
                         <span class="text-base">🌙</span>
-                        <span>Ca Tối & Nhiệm Vụ Khác (Báo cáo cuối ngày, kiểm tra chỉ số...)</span>
+                        <span>Ca Tối & Nhiệm Vụ Khác (Báo cáo cuối ngày...)</span>
                     </div>
-                    <button onclick="openTaskModalWithSlot('evening', '18:00')" class="text-xs text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-1">
+                    <button onclick="openTaskModalWithSlot('evening', '17:30')" class="text-xs text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-1 shrink-0 bg-white px-2.5 py-1 rounded-lg border border-blue-200 shadow-sm">
                         <i data-lucide="plus" class="w-3.5 h-3.5"></i> Thêm việc
                     </button>
                 </div>
@@ -445,9 +471,14 @@
                 </div>
             </div>
 
-            <!-- Tasks Table -->
+            <!-- Mobile Tasks Card List (Shown on phones < md) -->
+            <div id="allTasksMobileList" class="md:hidden space-y-3">
+                <!-- Injected by JS -->
+            </div>
+
+            <!-- Tasks Table (Shown on tablets & desktops >= md) -->
             <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                <div class="overflow-x-auto">
+                <div class="hidden md:block overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
@@ -465,9 +496,9 @@
                         </tbody>
                     </table>
                 </div>
-                <div id="allTasksEmptyState" class="hidden p-12 text-center text-slate-400">
+                <div id="allTasksEmptyState" class="hidden p-10 text-center text-slate-400">
                     <i data-lucide="clipboard-list" class="w-12 h-12 mx-auto mb-3 text-slate-300"></i>
-                    <p class="font-medium">Chưa có công việc nào trong danh sách. Bấm "Thêm Công Việc" ở trên để tạo.</p>
+                    <p class="font-medium text-xs sm:text-sm">Chưa có công việc nào trong danh sách. Bấm "Thêm Công Việc" hoặc "Tải Từ Sheet".</p>
                 </div>
             </div>
         </div>
@@ -475,25 +506,25 @@
         <!-- ======================================================== -->
         <!-- TAB 3: ĐỘI NGŨ NHÂN SỰ (NHANSU)                          -->
         <!-- ======================================================== -->
-        <div id="tabContent-team" class="tab-pane hidden space-y-5">
-            <div class="flex items-center justify-between">
+        <div id="tabContent-team" class="tab-pane hidden space-y-4 sm:space-y-5">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                 <div>
-                    <h3 class="font-bold text-slate-900 text-base">Danh Sách Nhân Sự Phòng Kinh Doanh (Sheet NhanSu)</h3>
-                    <p class="text-xs text-slate-500">
-                        Lấy từ Google Sheet <em>NhanSu</em>. Không bắt buộc email riêng (mặc định thông báo sẽ gửi về <strong>tttai.mitsubishi.bth@gmail.com</strong>)
+                    <h3 class="font-bold text-slate-900 text-sm sm:text-base">Danh Sách Nhân Sự Phòng Kinh Doanh (Sheet NhanSu)</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">
+                        Đồng bộ 2 chiều với Google Sheet <em>NhanSu</em>. Mặc định nhận thông báo qua <strong>tttai.mitsubishi.bth@gmail.com</strong>
                     </p>
                 </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="saveEmployeesToGoogleSheet()" class="px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-md shadow-emerald-600/20 flex items-center gap-1.5 transition-all">
-                        <i data-lucide="cloud-upload" class="w-3.5 h-3.5"></i>
-                        <span>Lưu Nhân Sự Vào Sheet</span>
+                <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                    <button onclick="saveEmployeesToGoogleSheet()" class="flex-1 sm:flex-initial justify-center px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-sm flex items-center gap-1.5 transition-all">
+                        <i data-lucide="cloud-upload" class="w-3.5 h-3.5 shrink-0"></i>
+                        <span>Lưu Vào Sheet</span>
                     </button>
-                    <button onclick="syncFromGoogleSheets()" class="px-3.5 py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-semibold text-xs flex items-center gap-1.5 transition-all">
-                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                    <button onclick="syncFromGoogleSheets(false)" class="flex-1 sm:flex-initial justify-center px-3 py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-semibold text-xs flex items-center gap-1.5 transition-all">
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5 shrink-0"></i>
                         <span>Tải Từ Sheet</span>
                     </button>
-                    <button onclick="openEmployeeModal()" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs sm:text-sm shadow-md shadow-blue-500/20 flex items-center gap-1.5 transition-all">
-                        <i data-lucide="user-plus" class="w-4 h-4"></i>
+                    <button onclick="openEmployeeModal()" class="w-full sm:w-auto justify-center px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm shadow-md shadow-blue-500/20 flex items-center gap-1.5 transition-all">
+                        <i data-lucide="user-plus" class="w-4 h-4 shrink-0"></i>
                         <span>Thêm Nhân Sự Mới</span>
                     </button>
                 </div>
@@ -708,6 +739,35 @@
 
     </main>
 
+    <!-- Mobile Sticky Bottom Navigation Bar -->
+    <nav class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-lg px-1 py-1 flex items-center justify-around">
+        <button onclick="switchTab('today')" id="mobTabBtn-today" class="mobile-nav-btn active flex-1 py-1.5 flex flex-col items-center justify-center gap-0.5 text-slate-500 relative transition-all">
+            <span class="mobile-nav-indicator absolute -top-1 w-8 h-1 rounded-full bg-blue-600 opacity-0 scale-x-50 transition-all"></span>
+            <i data-lucide="calendar" class="w-4 h-4"></i>
+            <span class="text-[10px] leading-tight">Hôm nay</span>
+        </button>
+        <button onclick="switchTab('all')" id="mobTabBtn-all" class="mobile-nav-btn flex-1 py-1.5 flex flex-col items-center justify-center gap-0.5 text-slate-500 relative transition-all">
+            <span class="mobile-nav-indicator absolute -top-1 w-8 h-1 rounded-full bg-blue-600 opacity-0 scale-x-50 transition-all"></span>
+            <i data-lucide="layers" class="w-4 h-4"></i>
+            <span class="text-[10px] leading-tight">Công việc</span>
+        </button>
+        <button onclick="switchTab('team')" id="mobTabBtn-team" class="mobile-nav-btn flex-1 py-1.5 flex flex-col items-center justify-center gap-0.5 text-slate-500 relative transition-all">
+            <span class="mobile-nav-indicator absolute -top-1 w-8 h-1 rounded-full bg-blue-600 opacity-0 scale-x-50 transition-all"></span>
+            <i data-lucide="users" class="w-4 h-4"></i>
+            <span class="text-[10px] leading-tight">Nhân sự</span>
+        </button>
+        <button onclick="switchTab('matrix')" id="mobTabBtn-matrix" class="mobile-nav-btn flex-1 py-1.5 flex flex-col items-center justify-center gap-0.5 text-slate-500 relative transition-all">
+            <span class="mobile-nav-indicator absolute -top-1 w-8 h-1 rounded-full bg-blue-600 opacity-0 scale-x-50 transition-all"></span>
+            <i data-lucide="calendar-range" class="w-4 h-4"></i>
+            <span class="text-[10px] leading-tight">Lịch 7 ngày</span>
+        </button>
+        <button onclick="switchTab('settings')" id="mobTabBtn-settings" class="mobile-nav-btn flex-1 py-1.5 flex flex-col items-center justify-center gap-0.5 text-slate-500 relative transition-all">
+            <span class="mobile-nav-indicator absolute -top-1 w-8 h-1 rounded-full bg-blue-600 opacity-0 scale-x-50 transition-all"></span>
+            <i data-lucide="settings" class="w-4 h-4"></i>
+            <span class="text-[10px] leading-tight">Cài đặt</span>
+        </button>
+    </nav>
+
     <!-- Footer -->
     <footer class="mt-auto border-t border-slate-200 bg-white py-4 text-center text-xs text-slate-500">
         <p>Phòng Kinh Doanh TaskHub • Bản chạy online GitHub Pages • Tích hợp Google Apps Script Webhook</p>
@@ -912,7 +972,7 @@
                 <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
                     <label class="block text-xs font-bold text-slate-800 uppercase">Khung Giờ & Thời Gian Nhắc Việc</label>
                     
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                             <label class="text-[11px] font-semibold text-slate-600 block mb-1">Phân Ca / Khung Thời Gian</label>
                             <select id="taskForm_slot" onchange="syncSlotDefaultTime()" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-blue-500">
@@ -975,7 +1035,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Mức Độ Ưu Tiên</label>
                         <select id="taskForm_priority" class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-blue-500">
@@ -1036,7 +1096,7 @@
                     <p class="text-[11px] text-slate-500 mt-1">Nếu không có email riêng, thông báo sẽ tự động gửi về hòm thư mặc định.</p>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Chức Vụ / Vai Trò</label>
                         <input type="text" id="empForm_role" value="Chuyên viên kinh doanh" placeholder="VD: Chuyên viên kinh doanh" class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500">
@@ -1068,15 +1128,16 @@
     </div>
 
     <!-- Toast Notification Container -->
-    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
+    <div id="toastContainer" class="fixed bottom-16 md:bottom-5 left-3 right-3 sm:left-auto sm:right-5 z-50 flex flex-col gap-2 sm:max-w-sm pointer-events-none"></div>
 
     <!-- ======================================================== -->
     <!-- CLIENT-SIDE APPLICATION JAVASCRIPT                       -->
     <!-- ======================================================== -->
     <script>
-        const STORAGE_KEY = 'phong_kinh_doanh_task_hub_v3';
+        const STORAGE_KEY = 'phong_kinh_doanh_task_hub_v5';
+        const EMP_COLOR_PALETTE = ['#2563EB', '#059669', '#7C3AED', '#EA580C', '#DC2626', '#0891B2', '#4F46E5', '#BE185D', '#CA8A04', '#0D9488'];
 
-        // Default initial data: Clean tasks, updated to Phòng Kinh Doanh & default email tttai.mitsubishi.bth@gmail.com
+        // Default initial data: Start empty so opening on a new phone/browser NEVER overwrites the Google Sheet with dummy data!
         const DEFAULT_DATA = {
             settings: {
                 smtp_email: 'tttai.mitsubishi.bth@gmail.com',
@@ -1089,12 +1150,15 @@
                 auto_save_sheet: true,
                 last_sheet_sync: null
             },
-            employees: [
-                { id: 1, name: 'Tài Trần', email: 'tttai.mitsubishi.bth@gmail.com', role: 'Quản lý điều hành', department: 'Phòng Kinh Doanh', color: '#2563EB' }
-            ],
+            employees: [],
             tasks: [],
             logs: []
         };
+
+        // Sync protection state flags
+        let isInitialSyncCompleted = false;
+        let isSyncingInProgress = false;
+        let lastSheetPullTimestamp = 0;
 
         // App state
         let appState = loadState();
@@ -1102,19 +1166,23 @@
 
         function loadState() {
             try {
-                const raw = localStorage.getItem(STORAGE_KEY);
+                const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('phong_kinh_doanh_task_hub_v3');
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     const loadedSettings = { ...DEFAULT_DATA.settings, ...(parsed.settings || {}) };
-                    // Auto-upgrade to user's new Webhook Exec URL
                     if (loadedSettings.apps_script_url && !loadedSettings.apps_script_url.includes('AKfycbznDq_z0thisC7LSpshyeJr6X3QxNbe-NJ0RCrJ1fcvr4_4KyFGBer4aszpuxbdlggp')) {
                         loadedSettings.apps_script_url = 'https://script.google.com/macros/s/AKfycbznDq_z0thisC7LSpshyeJr6X3QxNbe-NJ0RCrJ1fcvr4_4KyFGBer4aszpuxbdlggp/exec';
                     }
+                    // Filter out legacy single dummy employee 'Tài Trần' if it was the only default item
+                    let loadedEmployees = Array.isArray(parsed.employees) ? parsed.employees : [];
+                    if (loadedEmployees.length === 1 && loadedEmployees[0].name === 'Tài Trần' && (!parsed.tasks || parsed.tasks.length === 0)) {
+                        loadedEmployees = [];
+                    }
                     return {
                         settings: loadedSettings,
-                        employees: parsed.employees || DEFAULT_DATA.employees,
-                        tasks: parsed.tasks || [],
-                        logs: parsed.logs || []
+                        employees: loadedEmployees,
+                        tasks: Array.isArray(parsed.tasks) ? parsed.tasks : [],
+                        logs: Array.isArray(parsed.logs) ? parsed.logs : []
                     };
                 }
             } catch (e) {
@@ -1132,9 +1200,9 @@
         }
 
         // -------------------------------------------------------------
-        // INIT & CLOCK & SCHEDULER
+        // INIT & CLOCK & SCHEDULER & AUTOMATIC CLOUD SYNC ON STARTUP
         // -------------------------------------------------------------
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             initClock();
             renderAll();
             updateLastSyncDisplay();
@@ -1142,11 +1210,18 @@
             // Run in-browser scheduler every 30 seconds
             setInterval(checkTaskReminders, 30000);
 
-            // Auto check notification permission status
+            // Auto check notification permission status safely
             updateNotificationBtnStatus();
 
-            // Try initial sync from Google Sheets if available
-            checkPersonnelStatus();
+            // CRITICAL FIX: Automatically pull latest tasks & employees from Google Sheet on every browser/phone startup!
+            await syncFromGoogleSheets(true);
+
+            // Auto-refresh from Google Sheet when user switches back to this tab after >45s
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible' && (Date.now() - lastSheetPullTimestamp > 45000)) {
+                    syncFromGoogleSheets(true);
+                }
+            });
         });
 
         function initClock() {
@@ -1206,6 +1281,8 @@
             document.getElementById('statCompletedTasks').textContent = completed;
             document.getElementById('statCompletionRate').textContent = `${rate}% tiến độ`;
             document.getElementById('statTotalEmployees').textContent = appState.employees.length;
+            const tabTeamCountEl = document.getElementById('tabTeamCount');
+            if (tabTeamCountEl) tabTeamCountEl.textContent = appState.employees.length;
         }
 
         function renderBadges() {
@@ -1337,10 +1414,10 @@
  * 
  * Các chức năng cốt lõi:
  * 1. doPost(e): Webhook nhận lệnh từ giao diện Web (save_all, save_tasks, save_employees, send_email).
+ *    - Có cơ chế BẢO VỆ DỮ LIỆU: Chặn ghi đè mảng rỗng khi mở từ trình duyệt/thiết bị mới chưa đồng bộ!
  * 2. autoCheckAndSendReminders(): HÀM TỰ ĐỘNG CHẠY 24/7 TRÊN GOOGLE CLOUD
  *    - Quét sheet "Danh Sach Cong Viec" và "NhanSu" mỗi 5-10 phút.
  *    - Đến đúng giờ cấu hình (09:00, 12:00, 16:30...), tự gửi Gmail cho người đến lượt.
- *    - Tắt máy tính, tắt trình duyệt vẫn tự động gửi 100%!
  * 3. setupAutoReminderTrigger(): Chạy hàm này 1 lần để kích hoạt lịch tự động 24/7!
  * =========================================================================
  */
@@ -1398,7 +1475,7 @@ function doPost(e) {
     }
 
     // =====================================================================
-    // 2. LƯU CÔNG VIỆC VÀO SHEET "Danh Sach Cong Viec"
+    // 2. LƯU CÔNG VIỆC VÀO SHEET "Danh Sach Cong Viec" (CÓ CHỐNG MẤT DỮ LIỆU)
     // =====================================================================
     if (data.action === 'save_tasks' || data.action === 'save_all') {
       var taskSheet = ss.getSheetByName('Danh Sach Cong Viec');
@@ -1406,42 +1483,50 @@ function doPost(e) {
         taskSheet = ss.insertSheet('Danh Sach Cong Viec');
       }
 
-      var taskHeaders = [
-        'Tiêu đề công việc',
-        'Mô tả chi tiết',
-        'Khung giờ',
-        'Giờ nhắc cụ thể',
-        'Người phụ trách / Thứ tự luân phiên',
-        'Độ ưu tiên',
-        'Chế độ phân bổ',
-        'Trạng thái',
-        'Cập nhật lúc'
-      ];
+      var hasIncomingTasks = (data.tasks && data.tasks.length > 0);
+      var allowEmptyTasks = (data.allowEmptyOverwrite === true);
 
-      taskSheet.clearContents();
-      taskSheet.getRange(1, 1, 1, taskHeaders.length).setValues([taskHeaders]);
-      taskSheet.getRange(1, 1, 1, taskHeaders.length)
-        .setFontWeight('bold')
-        .setBackground('#1d4ed8')
-        .setFontColor('#ffffff');
+      // Bảo vệ: Nếu thiết bị mới gửi mảng rỗng mà không có cờ xóa chủ đích, KHÔNG xóa dữ liệu đang có trên Sheet!
+      if (hasIncomingTasks || allowEmptyTasks || taskSheet.getLastRow() === 0) {
+        var taskHeaders = [
+          'Tiêu đề công việc',
+          'Mô tả chi tiết',
+          'Khung giờ',
+          'Giờ nhắc cụ thể',
+          'Người phụ trách / Thứ tự luân phiên',
+          'Độ ưu tiên',
+          'Chế độ phân bổ',
+          'Trạng thái',
+          'Cập nhật lúc'
+        ];
 
-      if (data.tasks && data.tasks.length > 0) {
-        var nowStr = Utilities.formatDate(new Date(), "GMT+7", "dd/MM/yyyy HH:mm:ss");
-        var taskRows = data.tasks.map(function(t) {
-          return [
-            t.title || '',
-            t.description || '',
-            t.slotName || t.slot || '',
-            t.scheduled_time || '',
-            t.assignee_label || t.assignee_name || '',
-            t.priorityName || t.priority || 'Bình thường',
-            t.modeName || t.assignee_mode || 'Cố định',
-            t.statusName || t.status || 'Chờ thực hiện',
-            nowStr
-          ];
-        });
-        taskSheet.getRange(2, 1, taskRows.length, taskHeaders.length).setValues(taskRows);
-        taskSheet.autoResizeColumns(1, taskHeaders.length);
+        taskSheet.clearContents();
+        taskSheet.getRange(1, 1, 1, taskHeaders.length).setValues([taskHeaders]);
+        taskSheet.getRange(1, 1, 1, taskHeaders.length)
+          .setFontWeight('bold')
+          .setBackground('#1d4ed8')
+          .setFontColor('#ffffff');
+
+        if (hasIncomingTasks) {
+          var nowStr = Utilities.formatDate(new Date(), "GMT+7", "dd/MM/yyyy HH:mm:ss");
+          var taskRows = data.tasks.map(function(t) {
+            return [
+              t.title || '',
+              t.description || '',
+              t.slotName || t.slot || '',
+              t.scheduled_time || '09:00',
+              t.assignee_label || t.assignee_name || '',
+              t.priorityName || t.priority || 'Bình thường',
+              t.modeName || t.assignee_mode || 'Cố định',
+              t.statusName || t.status || 'Chờ thực hiện',
+              nowStr
+            ];
+          });
+          // Định dạng cột Giờ nhắc (cột 4) là văn bản thuần để không bị đổi sang Date(1899...)
+          taskSheet.getRange(2, 4, taskRows.length, 1).setNumberFormat('@');
+          taskSheet.getRange(2, 1, taskRows.length, taskHeaders.length).setValues(taskRows);
+          taskSheet.autoResizeColumns(1, taskHeaders.length);
+        }
       }
 
       if (data.action === 'save_tasks') {
@@ -1453,7 +1538,7 @@ function doPost(e) {
     }
 
     // =====================================================================
-    // 3. LƯU NHÂN SỰ VÀO SHEET "NhanSu"
+    // 3. LƯU NHÂN SỰ VÀO SHEET "NhanSu" (CÓ CHỐNG MẤT DỮ LIỆU)
     // =====================================================================
     if (data.action === 'save_employees' || data.action === 'save_all') {
       var empSheet = ss.getSheetByName('NhanSu');
@@ -1461,34 +1546,40 @@ function doPost(e) {
         empSheet = ss.insertSheet('NhanSu');
       }
 
-      var empHeaders = [
-        'Họ và tên',
-        'Email nhận thông báo',
-        'Chức vụ',
-        'Phòng ban',
-        'Cập nhật lúc'
-      ];
+      var hasIncomingEmps = (data.employees && data.employees.length > 0);
+      var allowEmptyEmps = (data.allowEmptyOverwrite === true);
 
-      empSheet.clearContents();
-      empSheet.getRange(1, 1, 1, empHeaders.length).setValues([empHeaders]);
-      empSheet.getRange(1, 1, 1, empHeaders.length)
-        .setFontWeight('bold')
-        .setBackground('#059669')
-        .setFontColor('#ffffff');
+      // Bảo vệ: Nếu thiết bị mới gửi mảng rỗng mà không có cờ xóa chủ đích, KHÔNG xóa danh sách nhân sự đang có!
+      if (hasIncomingEmps || allowEmptyEmps || empSheet.getLastRow() === 0) {
+        var empHeaders = [
+          'Họ và tên',
+          'Email nhận thông báo',
+          'Chức vụ',
+          'Phòng ban',
+          'Cập nhật lúc'
+        ];
 
-      if (data.employees && data.employees.length > 0) {
-        var nowStr = Utilities.formatDate(new Date(), "GMT+7", "dd/MM/yyyy HH:mm:ss");
-        var empRows = data.employees.map(function(e) {
-          return [
-            e.name || '',
-            e.email || 'tttai.mitsubishi.bth@gmail.com',
-            e.role || 'Chuyên viên kinh doanh',
-            e.department || 'Phòng Kinh Doanh',
-            nowStr
-          ];
-        });
-        empSheet.getRange(2, 1, empRows.length, empHeaders.length).setValues(empRows);
-        empSheet.autoResizeColumns(1, empHeaders.length);
+        empSheet.clearContents();
+        empSheet.getRange(1, 1, 1, empHeaders.length).setValues([empHeaders]);
+        empSheet.getRange(1, 1, 1, empHeaders.length)
+          .setFontWeight('bold')
+          .setBackground('#059669')
+          .setFontColor('#ffffff');
+
+        if (hasIncomingEmps) {
+          var nowStr = Utilities.formatDate(new Date(), "GMT+7", "dd/MM/yyyy HH:mm:ss");
+          var empRows = data.employees.map(function(e) {
+            return [
+              e.name || '',
+              e.email || 'tttai.mitsubishi.bth@gmail.com',
+              e.role || 'Chuyên viên kinh doanh',
+              e.department || 'Phòng Kinh Doanh',
+              nowStr
+            ];
+          });
+          empSheet.getRange(2, 1, empRows.length, empHeaders.length).setValues(empRows);
+          empSheet.autoResizeColumns(1, empHeaders.length);
+        }
       }
 
       if (data.action === 'save_employees') {
@@ -1533,10 +1624,6 @@ function doGet(e) {
 // =========================================================================
 // 5. HÀM TỰ ĐỘNG QUÉT VÀ NHẮC VIỆC 24/7 TRÊN MÁY CHỦ GOOGLE
 // =========================================================================
-/**
- * Chạy tự động trên máy chủ Google hoàn toàn miễn phí, 24/7.
- * Không cần mở máy tính, không cần mở trình duyệt!
- */
 function autoCheckAndSendReminders() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var taskSheet = ss.getSheetByName('Danh Sach Cong Viec');
@@ -1544,13 +1631,13 @@ function autoCheckAndSendReminders() {
   var reportSheet = ss.getSheetByName('BaoCao');
   if (!taskSheet) return;
 
-  var taskData = taskSheet.getDataRange().getValues();
+  // Dùng getDisplayValues() để luôn lấy đúng chuỗi giờ "09:00", "17:30"
+  var taskData = taskSheet.getDataRange().getDisplayValues();
   if (taskData.length <= 1) return;
 
-  // Lấy danh sách nhân sự từ sheet NhanSu
   var employees = [];
   if (empSheet && empSheet.getLastRow() > 1) {
-    var empData = empSheet.getDataRange().getValues();
+    var empData = empSheet.getDataRange().getDisplayValues();
     for (var i = 1; i < empData.length; i++) {
       var row = empData[i];
       if (row[0]) {
@@ -1588,7 +1675,9 @@ function autoCheckAndSendReminders() {
     if (status.toLowerCase().includes('hoàn thành') || status.toLowerCase().includes('completed')) continue;
 
     var timeList = [];
-    if (timeStr.includes(',')) {
+    if (slot.toLowerCase().includes('3 ca') || slot.toLowerCase().includes('cả 3')) {
+      timeList = ['09:00', '12:00', '16:30'];
+    } else if (timeStr.includes(',')) {
       timeList = timeStr.split(',').map(function(s) { return s.trim(); });
     } else if (timeStr.includes(':')) {
       timeList = [timeStr];
@@ -1608,7 +1697,6 @@ function autoCheckAndSendReminders() {
       var targetTotalMinutes = targetH * 60 + targetM;
 
       var diffMinutes = currentTotalMinutes - targetTotalMinutes;
-      // Kích hoạt khi đến giờ hoặc trễ tối đa 11 phút (phù hợp với trigger chạy mỗi 10 phút)
       if (diffMinutes >= 0 && diffMinutes < 12) {
         var reminderKey = 'SENT_' + todayDateStr + '_' + title + '_' + targetTime;
         var alreadySent = scriptProps.getProperty(reminderKey);
@@ -1694,10 +1782,6 @@ function autoCheckAndSendReminders() {
   }
 }
 
-/**
- * HÀM CÀI ĐẶT LỊCH NHẮC TỰ ĐỘNG 24/7
- * Bấm chạy hàm này 1 lần duy nhất trong Apps Script là lịch kích hoạt vĩnh viễn!
- */
 function setupAutoReminderTrigger() {
   var allTriggers = ScriptApp.getProjectTriggers();
   for (var i = 0; i < allTriggers.length; i++) {
@@ -1719,7 +1803,13 @@ function setupAutoReminderTrigger() {
         // FORMAT DATA FOR GOOGLE SHEETS WRITE
         // -------------------------------------------------------------
         function formatTasksForSheet(tasks) {
-            const slotNames = { morning: 'Sáng', noon: 'Trưa', afternoon: 'Chiều', evening: 'Tối' };
+            const slotNames = {
+                morning: 'Sáng',
+                noon: 'Trưa',
+                afternoon: 'Chiều',
+                evening: 'Tối',
+                all_day_3: 'Cả 3 ca (Sáng, Trưa, Chiều)'
+            };
             const priorityNames = { urgent: 'Khẩn cấp', high: 'Ưu tiên cao', medium: 'Bình thường', low: 'Thấp' };
             const modeNames = {
                 daily_rotation: 'Xoay vòng theo ngày',
@@ -1735,9 +1825,11 @@ function setupAutoReminderTrigger() {
                 if (t.assignee_mode === 'broadcast') {
                     assigneeLabel = 'Tất cả nhân sự';
                 } else if (t.assignee_mode === 'daily_rotation' || t.assignee_mode === 'weekly_rotation' || t.assignee_mode === 'shift_rotation') {
-                    const pool = (t.rotation_pool || []).map(id => appState.employees.find(e => e.id === id)).filter(Boolean);
-                    const curIdx = typeof t.current_assignee_index === 'number' ? t.current_assignee_index : 0;
-                    const curEmp = pool[curIdx % pool.length];
+                    const pool = (t.rotation_pool && t.rotation_pool.length > 0)
+                        ? t.rotation_pool.map(id => appState.employees.find(e => e.id === id)).filter(Boolean)
+                        : appState.employees;
+                    const curIdx = pool.length > 0 ? (((t.current_assignee_index || 0) % pool.length) + pool.length) % pool.length : 0;
+                    const curEmp = pool[curIdx];
                     const nextEmp = pool.length > 1 ? pool[(curIdx + 1) % pool.length] : curEmp;
                     const queueStr = pool.map(e => e.name).join(' ➔ ');
                     assigneeLabel = `Luân phiên: [Hiện tại: ${curEmp ? curEmp.name : '?'}] ➔ [Tiếp theo: ${nextEmp ? nextEmp.name : '?'}] | Hàng đợi: ${queueStr}`;
@@ -1769,17 +1861,21 @@ function setupAutoReminderTrigger() {
             }));
         }
 
-        function updateLastSyncDisplay() {
+        function updateLastSyncDisplay(labelPrefix = 'Đã đồng bộ Sheet') {
+            const timeStr = appState.settings.last_sheet_sync || new Date().toLocaleTimeString('vi-VN', { hour12: false });
             const badge = document.getElementById('lastSyncStatusBadge');
             if (badge) {
-                const timeStr = appState.settings.last_sheet_sync || new Date().toLocaleTimeString('vi-VN', { hour12: false });
-                badge.innerHTML = `<i data-lucide="check" class="w-3 h-3 text-emerald-600"></i><span>Đã lưu lên Sheet: <strong>${timeStr}</strong></span>`;
-                lucide.createIcons();
+                badge.innerHTML = `<i data-lucide="check" class="w-3 h-3 text-emerald-600"></i><span>${labelPrefix}: <strong>${timeStr}</strong></span>`;
             }
+            const mobBadge = document.getElementById('mobileSyncMiniStatus');
+            if (mobBadge) {
+                mobBadge.textContent = `Đồng bộ: ${timeStr}`;
+            }
+            lucide.createIcons();
         }
 
         // -------------------------------------------------------------
-        // SAVE ACTIONS (TWO-WAY SYNC TO GOOGLE SHEETS)
+        // SAFE SAVE ACTIONS (PROTECTED TWO-WAY SYNC TO GOOGLE SHEETS)
         // -------------------------------------------------------------
         async function saveAllToGoogleSheets(silent = false) {
             const webhookUrl = appState.settings.apps_script_url.trim();
@@ -1788,12 +1884,33 @@ function setupAutoReminderTrigger() {
                 return;
             }
 
+            // Protection 1: Ensure initial sync from Google Sheets completed first
+            if (!isInitialSyncCompleted) {
+                await syncFromGoogleSheets(true);
+            }
+
+            // Protection 2: Never wipe both sheets if local state is empty!
+            if (appState.tasks.length === 0 && appState.employees.length === 0) {
+                showToast('Đang tải dữ liệu từ Google Sheet để tránh ghi đè dữ liệu trống...', 'info');
+                await syncFromGoogleSheets(false);
+                return;
+            }
+
+            // Protection 3: If one list is empty, only save the non-empty one
+            if (appState.tasks.length === 0 && appState.employees.length > 0) {
+                return await saveEmployeesToGoogleSheet(silent, false);
+            }
+            if (appState.employees.length === 0 && appState.tasks.length > 0) {
+                return await saveTasksToGoogleSheet(silent, false);
+            }
+
             if (!silent) showToast('Đang lưu Công Việc & Nhân Sự vào Google Sheet...', 'info');
 
             const payload = {
                 action: 'save_all',
                 tasks: formatTasksForSheet(appState.tasks),
-                employees: formatEmployeesForSheet(appState.employees)
+                employees: formatEmployeesForSheet(appState.employees),
+                allowEmptyOverwrite: false
             };
 
             try {
@@ -1806,7 +1923,7 @@ function setupAutoReminderTrigger() {
 
                 appState.settings.last_sheet_sync = new Date().toLocaleTimeString('vi-VN', { hour12: false });
                 saveState();
-                updateLastSyncDisplay();
+                updateLastSyncDisplay('Đã lưu lên Sheet');
 
                 showToast(`✓ Đã lưu ${appState.tasks.length} việc vào "Danh Sach Cong Viec" và ${appState.employees.length} nhân sự vào "NhanSu"!`, 'success');
                 addLogEntry('Lưu vào Google Sheet', 'Hệ thống', 'Google Sheets', 'Thành công', `Đã lưu ${appState.tasks.length} việc và ${appState.employees.length} nhân sự vào 2 sheet tương ứng.`);
@@ -1816,10 +1933,20 @@ function setupAutoReminderTrigger() {
             }
         }
 
-        async function saveTasksToGoogleSheet(silent = false) {
+        async function saveTasksToGoogleSheet(silent = false, allowEmpty = false) {
             const webhookUrl = appState.settings.apps_script_url.trim();
             if (!webhookUrl) {
                 showToast('Chưa có link Google Apps Script Webhook trong Cài Đặt!', 'error');
+                return;
+            }
+
+            if (!isInitialSyncCompleted) {
+                await syncFromGoogleSheets(true);
+            }
+
+            if (appState.tasks.length === 0 && !allowEmpty) {
+                if (!silent) showToast('Danh sách công việc đang trống, hệ thống tự động tải lại từ Sheet để bảo vệ dữ liệu!', 'warning');
+                await syncFromGoogleSheets(silent);
                 return;
             }
 
@@ -1827,7 +1954,8 @@ function setupAutoReminderTrigger() {
 
             const payload = {
                 action: 'save_tasks',
-                tasks: formatTasksForSheet(appState.tasks)
+                tasks: formatTasksForSheet(appState.tasks),
+                allowEmptyOverwrite: allowEmpty
             };
 
             try {
@@ -1840,7 +1968,7 @@ function setupAutoReminderTrigger() {
 
                 appState.settings.last_sheet_sync = new Date().toLocaleTimeString('vi-VN', { hour12: false });
                 saveState();
-                updateLastSyncDisplay();
+                updateLastSyncDisplay('Đã lưu lên Sheet');
 
                 showToast(`✓ Đã lưu ${appState.tasks.length} công việc vào tab "Danh Sach Cong Viec"!`, 'success');
                 addLogEntry('Lưu công việc vào Sheet', 'Hệ thống', 'Danh Sach Cong Viec', 'Thành công', `Đã lưu ${appState.tasks.length} công việc lên Google Sheet.`);
@@ -1849,10 +1977,20 @@ function setupAutoReminderTrigger() {
             }
         }
 
-        async function saveEmployeesToGoogleSheet(silent = false) {
+        async function saveEmployeesToGoogleSheet(silent = false, allowEmpty = false) {
             const webhookUrl = appState.settings.apps_script_url.trim();
             if (!webhookUrl) {
                 showToast('Chưa có link Google Apps Script Webhook trong Cài Đặt!', 'error');
+                return;
+            }
+
+            if (!isInitialSyncCompleted) {
+                await syncFromGoogleSheets(true);
+            }
+
+            if (appState.employees.length === 0 && !allowEmpty) {
+                if (!silent) showToast('Danh sách nhân sự đang trống, hệ thống tự động tải lại từ Sheet để bảo vệ dữ liệu!', 'warning');
+                await syncFromGoogleSheets(silent);
                 return;
             }
 
@@ -1860,7 +1998,8 @@ function setupAutoReminderTrigger() {
 
             const payload = {
                 action: 'save_employees',
-                employees: formatEmployeesForSheet(appState.employees)
+                employees: formatEmployeesForSheet(appState.employees),
+                allowEmptyOverwrite: allowEmpty
             };
 
             try {
@@ -1873,7 +2012,7 @@ function setupAutoReminderTrigger() {
 
                 appState.settings.last_sheet_sync = new Date().toLocaleTimeString('vi-VN', { hour12: false });
                 saveState();
-                updateLastSyncDisplay();
+                updateLastSyncDisplay('Đã lưu lên Sheet');
 
                 showToast(`✓ Đã lưu ${appState.employees.length} nhân sự vào tab "NhanSu"!`, 'success');
                 addLogEntry('Lưu nhân sự vào Sheet', 'Hệ thống', 'NhanSu', 'Thành công', `Đã lưu ${appState.employees.length} nhân sự lên Google Sheet.`);
@@ -1914,19 +2053,28 @@ function setupAutoReminderTrigger() {
 
 
         // -------------------------------------------------------------
-        // GOOGLE SHEETS LIVE SYNC (GVIZ API - TỰ ĐỘNG LẤY NHÂN SỰ)
+        // GOOGLE SHEETS LIVE SYNC (GVIZ API - ĐỒNG BỘ 2 CHIỀU CHUẨN XÁC)
         // -------------------------------------------------------------
-        async function fetchSheetDataViaGviz(sheetId, gid) {
+        async function fetchSheetDataViaGviz(sheetId, gid, headers = 1) {
             return new Promise((resolve, reject) => {
-                const callbackName = 'gviz_callback_' + Math.floor(Math.random() * 1000000);
-                const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=responseHandler:${callbackName}&gid=${gid}&_=${Date.now()}`;
+                const callbackName = 'gviz_cb_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
+                const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=responseHandler:${callbackName}&gid=${gid}&headers=${headers}&_=${Date.now()}`;
                 
                 const script = document.createElement('script');
                 script.src = url;
 
+                const timeoutId = setTimeout(() => {
+                    if (window[callbackName]) {
+                        delete window[callbackName];
+                        if (script.parentNode) script.parentNode.removeChild(script);
+                        reject(new Error('Quá thời gian kết nối Google Sheets'));
+                    }
+                }, 12000);
+
                 window[callbackName] = function(response) {
+                    clearTimeout(timeoutId);
                     delete window[callbackName];
-                    document.body.removeChild(script);
+                    if (script.parentNode) script.parentNode.removeChild(script);
                     if (response && response.status === 'ok') {
                         resolve(response.table);
                     } else {
@@ -1935,8 +2083,9 @@ function setupAutoReminderTrigger() {
                 };
 
                 script.onerror = function() {
+                    clearTimeout(timeoutId);
                     delete window[callbackName];
-                    document.body.removeChild(script);
+                    if (script.parentNode) script.parentNode.removeChild(script);
                     reject(new Error('Lỗi kết nối tới Google Sheets'));
                 };
 
@@ -1944,48 +2093,65 @@ function setupAutoReminderTrigger() {
             });
         }
 
-        async function syncFromGoogleSheets() {
-            showToast('Đang kết nối tới Google Sheet...', 'info');
+        function parseGvizTime(cell, defaultTime = '09:00') {
+            if (!cell) return defaultTime;
+            if (cell.f && typeof cell.f === 'string') {
+                const m = cell.f.trim().match(/^(\d{1,2}):(\d{2})/);
+                if (m) return m[1].padStart(2, '0') + ':' + m[2];
+            }
+            if (cell.v instanceof Date) {
+                const hh = String(cell.v.getHours()).padStart(2, '0');
+                const mm = String(cell.v.getMinutes()).padStart(2, '0');
+                return `${hh}:${mm}`;
+            }
+            if (cell.v !== null && cell.v !== undefined) {
+                const s = String(cell.v).trim();
+                const mTime = s.match(/^(\d{1,2}):(\d{2})/);
+                if (mTime) return mTime[1].padStart(2, '0') + ':' + mTime[2];
+                const mDate = s.match(/Date\(\d+,\s*\d+,\s*\d+,\s*(\d+),\s*(\d+)/);
+                if (mDate) return mDate[1].padStart(2, '0') + ':' + mDate[2].padStart(2, '0');
+            }
+            return defaultTime;
+        }
+
+        async function syncFromGoogleSheets(isSilent = false) {
+            if (isSyncingInProgress) return;
+            isSyncingInProgress = true;
+
+            if (!isSilent) showToast('Đang tải dữ liệu mới nhất từ Google Sheet...', 'info');
             const sheetId = appState.settings.google_sheet_id || '1UvZKWzGpycOIjFHcjrHonQoCuFOWIpqfE0Jdj4eeXbA';
             const defaultEmail = appState.settings.smtp_email || 'tttai.mitsubishi.bth@gmail.com';
 
             try {
                 // 1. Sync Employees (gid: 1121546996 - NhanSu)
-                let empUpdated = 0;
-                let empAdded = 0;
                 let nhanSuEmpty = false;
-
                 try {
-                    const empTable = await fetchSheetDataViaGviz(sheetId, '1121546996');
+                    const empTable = await fetchSheetDataViaGviz(sheetId, '1121546996', 1);
+                    const syncedEmployees = [];
                     if (empTable && empTable.rows && empTable.rows.length > 0) {
-                        empTable.rows.forEach(r => {
+                        empTable.rows.forEach((r, idx) => {
                             const c = r.c || [];
                             const name = c[0]?.v ? String(c[0].v).trim() : '';
-                            // Email is optional! If empty, default to tttai.mitsubishi.bth@gmail.com
                             const email = (c[1]?.v && String(c[1].v).trim()) ? String(c[1].v).trim() : defaultEmail;
                             const role = c[2]?.v ? String(c[2].v).trim() : 'Chuyên viên kinh doanh';
                             const dept = c[3]?.v ? String(c[3].v).trim() : 'Phòng Kinh Doanh';
 
-                            if (name && name.toLowerCase() !== 'họ và tên' && name.toLowerCase() !== 'họ tên') {
-                                const exist = appState.employees.find(e => e.name.toLowerCase() === name.toLowerCase());
-                                if (exist) {
-                                    exist.email = email;
-                                    exist.role = role;
-                                    exist.department = dept;
-                                    empUpdated++;
-                                } else {
-                                    appState.employees.push({
-                                        id: Date.now() + Math.floor(Math.random() * 1000),
-                                        name: name,
-                                        email: email,
-                                        role: role,
-                                        department: dept,
-                                        color: '#2563EB'
-                                    });
-                                    empAdded++;
-                                }
+                            const lowerName = name.toLowerCase();
+                            if (name && lowerName !== 'họ và tên' && lowerName !== 'họ tên' && lowerName !== 'tên nhân sự') {
+                                const exist = appState.employees.find(e => e.name.toLowerCase() === lowerName);
+                                syncedEmployees.push({
+                                    id: exist ? exist.id : (101 + idx),
+                                    name: name,
+                                    email: email,
+                                    role: role,
+                                    department: dept,
+                                    color: (exist && exist.color) ? exist.color : EMP_COLOR_PALETTE[idx % EMP_COLOR_PALETTE.length]
+                                });
                             }
                         });
+                    }
+                    if (syncedEmployees.length > 0) {
+                        appState.employees = syncedEmployees;
                     } else {
                         nhanSuEmpty = true;
                     }
@@ -1994,93 +2160,167 @@ function setupAutoReminderTrigger() {
                 }
 
                 // 2. Sync Tasks (gid: 0 - Danh Sach Cong Viec)
-                let taskAdded = 0;
-                let taskUpdated = 0;
-
                 try {
-                    const taskTable = await fetchSheetDataViaGviz(sheetId, '0');
+                    const taskTable = await fetchSheetDataViaGviz(sheetId, '0', 1);
+                    const syncedTasks = [];
                     if (taskTable && taskTable.rows && taskTable.rows.length > 0) {
-                        taskTable.rows.forEach(r => {
+                        taskTable.rows.forEach((r, idx) => {
                             const c = r.c || [];
                             const title = c[0]?.v ? String(c[0].v).trim() : '';
                             const desc = c[1]?.v ? String(c[1].v).trim() : '';
                             const rawSlot = c[2]?.v ? String(c[2].v).trim().toLowerCase() : '';
-                            const rawTime = c[3]?.v ? String(c[3].v).trim() : '';
                             const rawAssignee = c[4]?.v ? String(c[4].v).trim() : '';
                             const rawPriority = c[5]?.v ? String(c[5].v).trim().toLowerCase() : 'medium';
+                            const rawMode = c[6]?.v ? String(c[6].v).trim().toLowerCase() : '';
                             const rawStatus = c[7]?.v ? String(c[7].v).trim().toLowerCase() : 'pending';
 
-                            if (title && title.toLowerCase() !== 'tiêu đề công việc' && title.toLowerCase() !== 'tiêu đề') {
+                            const lowerTitle = title.toLowerCase();
+                            if (title && lowerTitle !== 'tiêu đề công việc' && lowerTitle !== 'tiêu đề') {
                                 let slot = 'morning';
-                                if (rawSlot.includes('trưa') || rawSlot.includes('noon')) slot = 'noon';
-                                else if (rawSlot.includes('chiều') || rawSlot.includes('afternoon')) slot = 'afternoon';
-                                else if (rawSlot.includes('tối') || rawSlot.includes('evening')) slot = 'evening';
+                                if (rawSlot.includes('3 ca') || rawSlot.includes('cả 3') || (rawSlot.includes('sáng') && rawSlot.includes('chiều'))) {
+                                    slot = 'all_day_3';
+                                } else if (rawSlot.includes('trưa') || rawSlot.includes('noon')) {
+                                    slot = 'noon';
+                                } else if (rawSlot.includes('chiều') || rawSlot.includes('afternoon')) {
+                                    slot = 'afternoon';
+                                } else if (rawSlot.includes('tối') || rawSlot.includes('evening')) {
+                                    slot = 'evening';
+                                }
 
-                                let scheduled_time = rawTime || (slot === 'morning' ? '09:00' : (slot === 'noon' ? '12:00' : '16:30'));
-                                if (scheduled_time.length === 4 && scheduled_time.indexOf(':') === 1) scheduled_time = '0' + scheduled_time;
+                                const defaultSlotTime = slot === 'noon' ? '12:00' : (slot === 'afternoon' ? '16:30' : (slot === 'evening' ? '17:30' : '09:00'));
+                                const scheduled_time = parseGvizTime(c[3], defaultSlotTime);
 
                                 let priority = 'medium';
                                 if (rawPriority.includes('khẩn') || rawPriority.includes('urgent')) priority = 'urgent';
                                 else if (rawPriority.includes('cao') || rawPriority.includes('high')) priority = 'high';
                                 else if (rawPriority.includes('thấp') || rawPriority.includes('low')) priority = 'low';
 
-                                const status = (rawStatus.includes('xong') || rawStatus.includes('hoàn thành')) ? 'completed' : 'pending';
+                                const status = (rawStatus.includes('xong') || rawStatus.includes('hoàn thành') || rawStatus.includes('completed')) ? 'completed' : 'pending';
 
-                                // Find assignee or rotation mode
-                                let assigneeId = appState.employees[0]?.id || 1;
+                                // Determine allocation mode accurately from both Col G (rawMode) and Col E (rawAssignee)
+                                const lowerAssignee = rawAssignee.toLowerCase();
                                 let mode = 'single';
-                                if (rawAssignee.toLowerCase().includes('tất cả') || rawAssignee.toLowerCase().includes('all')) {
+                                if (rawMode.includes('tất cả') || lowerAssignee.includes('tất cả') || lowerAssignee === 'all') {
                                     mode = 'broadcast';
-                                } else if (rawAssignee.toLowerCase().includes('xoay') || rawAssignee.toLowerCase().includes('ngày')) {
+                                } else if (rawMode.includes('tuần') || lowerAssignee.includes('tuần')) {
+                                    mode = 'weekly_rotation';
+                                } else if (rawMode.includes('theo ca')) {
+                                    mode = 'shift_rotation';
+                                } else if (rawMode.includes('xoay') || rawMode.includes('ngày') || lowerAssignee.includes('luân phiên') || lowerAssignee.includes('xoay')) {
                                     mode = 'daily_rotation';
-                                } else if (rawAssignee) {
-                                    const found = appState.employees.find(e => e.name.toLowerCase() === rawAssignee.toLowerCase() || e.email.toLowerCase() === rawAssignee.toLowerCase());
+                                }
+
+                                // Reconstruct rotation_pool and current_assignee_index from Assignee string
+                                let rotationPool = appState.employees.map(e => e.id);
+                                const queueMatch = rawAssignee.match(/(?:Hàng đợi|Thứ tự):\s*\(?([^)]+)\)?/i);
+                                if (queueMatch && queueMatch[1]) {
+                                    const queueNames = queueMatch[1].split(/➔|->|,/).map(s => s.trim()).filter(Boolean);
+                                    const matchedIds = queueNames
+                                        .map(n => appState.employees.find(e => e.name.toLowerCase() === n.toLowerCase())?.id)
+                                        .filter(Boolean);
+                                    if (matchedIds.length > 0) {
+                                        rotationPool = matchedIds;
+                                    }
+                                }
+
+                                let currentAssigneeIndex = 0;
+                                const curMatch = rawAssignee.match(/\[Hiện tại:\s*([^\]]+)\]/i);
+                                if (curMatch && curMatch[1]) {
+                                    const curName = curMatch[1].trim().toLowerCase();
+                                    const curEmp = appState.employees.find(e => e.name.toLowerCase() === curName);
+                                    if (curEmp) {
+                                        const idxInPool = rotationPool.indexOf(curEmp.id);
+                                        if (idxInPool !== -1) {
+                                            currentAssigneeIndex = idxInPool;
+                                        } else {
+                                            rotationPool.unshift(curEmp.id);
+                                            currentAssigneeIndex = 0;
+                                        }
+                                    }
+                                }
+
+                                let assigneeId = appState.employees[0]?.id || 101;
+                                if (mode === 'single' && rawAssignee) {
+                                    const found = appState.employees.find(e => e.name.toLowerCase() === lowerAssignee || e.email.toLowerCase() === lowerAssignee);
                                     if (found) assigneeId = found.id;
                                 }
 
-                                const existingTask = appState.tasks.find(t => t.title === title);
-                                if (existingTask) {
-                                    existingTask.description = desc;
-                                    existingTask.slot = slot;
-                                    existingTask.scheduled_time = scheduled_time;
-                                    existingTask.priority = priority;
-                                    existingTask.assignee_id = assigneeId;
-                                    existingTask.assignee_mode = mode;
-                                    existingTask.status = status;
-                                    taskUpdated++;
-                                } else {
-                                    appState.tasks.push({
-                                        id: Date.now() + Math.floor(Math.random() * 1000),
-                                        title: title,
-                                        description: desc,
-                                        slot: slot,
-                                        scheduled_time: scheduled_time,
-                                        priority: priority,
-                                        status: status,
-                                        assignee_mode: mode,
-                                        assignee_id: assigneeId,
-                                        rotation_pool: appState.employees.map(e => e.id),
-                                        last_reminded_date: null
-                                    });
-                                    taskAdded++;
-                                }
+                                const existingTask = appState.tasks.find(t => t.title.toLowerCase() === lowerTitle);
+                                syncedTasks.push({
+                                    id: existingTask ? existingTask.id : (201 + idx),
+                                    title: title,
+                                    description: desc,
+                                    slot: slot,
+                                    scheduled_time: scheduled_time,
+                                    priority: priority,
+                                    status: status,
+                                    assignee_mode: mode,
+                                    assignee_id: assigneeId,
+                                    rotation_pool: rotationPool,
+                                    current_assignee_index: currentAssigneeIndex,
+                                    last_reminded_date: existingTask ? existingTask.last_reminded_date : null
+                                });
                             }
                         });
+                    }
+                    if (syncedTasks.length > 0) {
+                        appState.tasks = syncedTasks;
                     }
                 } catch (err) {
                     console.warn('Lỗi đọc sheet Danh Sach Cong Viec:', err);
                 }
 
+                // 3. Sync Recent Logs (gid: 2026235113 - BaoCao)
+                try {
+                    const logTable = await fetchSheetDataViaGviz(sheetId, '2026235113', 0);
+                    if (logTable && logTable.rows && logTable.rows.length > 0) {
+                        const parsedLogs = [];
+                        logTable.rows.forEach(r => {
+                            const c = r.c || [];
+                            const sentAt = c[0]?.f || (c[0]?.v ? String(c[0].v).trim() : '');
+                            const taskTitle = c[1]?.v ? String(c[1].v).trim() : '';
+                            const recName = c[2]?.v ? String(c[2].v).trim() : '';
+                            const recEmail = c[3]?.v ? String(c[3].v).trim() : '';
+                            const status = c[5]?.v ? String(c[5].v).trim() : 'Thành công';
+                            const msg = c[6]?.v ? String(c[6].v).trim() : '';
+                            if (sentAt && !sentAt.toLowerCase().includes('thời gian') && taskTitle) {
+                                parsedLogs.push({
+                                    sent_at: sentAt,
+                                    task_title: taskTitle,
+                                    recipient_name: recName,
+                                    recipient_email: recEmail,
+                                    status: status,
+                                    message: msg
+                                });
+                            }
+                        });
+                        if (parsedLogs.length > 0) {
+                            appState.logs = parsedLogs.reverse().slice(0, 35);
+                        }
+                    }
+                } catch (err) {
+                    console.warn('Lỗi đọc sheet BaoCao:', err);
+                }
+
+                isInitialSyncCompleted = true;
+                lastSheetPullTimestamp = Date.now();
+                appState.settings.last_sheet_sync = new Date().toLocaleTimeString('vi-VN', { hour12: false });
                 saveState();
                 renderAll();
+                updateLastSyncDisplay('Đã tải từ Sheet');
 
-                if (nhanSuEmpty && empAdded === 0 && empUpdated === 0) {
-                    showToast('Đã kết nối! Sheet NhanSu trên Google Drive chưa có dòng nào. Bạn có thể bấm Thêm Nhân Sự để bổ sung!', 'warning');
-                } else {
-                    showToast(`Đồng bộ thành công! Nhân sự: +${empAdded} mới, cập nhật ${empUpdated}. Công việc: +${taskAdded} mới.`, 'success');
+                if (!isSilent) {
+                    if (nhanSuEmpty && appState.employees.length === 0) {
+                        showToast('Đã kết nối! Sheet NhanSu hiện chưa có nhân sự nào.', 'warning');
+                    } else {
+                        showToast(`✓ Đã đồng bộ từ Google Sheet: ${appState.employees.length} nhân sự & ${appState.tasks.length} công việc!`, 'success');
+                    }
                 }
             } catch (e) {
-                showToast('Lỗi khi đồng bộ Google Sheet: ' + e.message, 'error');
+                isInitialSyncCompleted = true;
+                if (!isSilent) showToast('Lỗi khi đồng bộ Google Sheet: ' + e.message, 'error');
+            } finally {
+                isSyncingInProgress = false;
             }
         }
 
@@ -2391,12 +2631,16 @@ function setupAutoReminderTrigger() {
             const assignees = getAssignedPersonnelForTask(task, new Date());
             const assigneeNames = assignees.map(a => a.name).join(', ');
 
-            // 1. Browser Notification
-            if ("Notification" in window && Notification.permission === 'granted') {
-                new Notification(`⏰ [NHẮC VIỆC] ${task.title}`, {
-                    body: `Khung giờ: ${task.scheduled_time} • Người thực hiện: ${assigneeNames}`,
-                    icon: "https://cdn-icons-png.flaticon.com/512/3602/3602145.png"
-                });
+            // 1. Browser Notification (Safe try/catch for mobile browsers)
+            try {
+                if ("Notification" in window && Notification.permission === 'granted') {
+                    new Notification(`⏰ [NHẮC VIỆC] ${task.title}`, {
+                        body: `Khung giờ: ${task.scheduled_time} • Người thực hiện: ${assigneeNames}`,
+                        icon: "https://cdn-icons-png.flaticon.com/512/3602/3602145.png"
+                    });
+                }
+            } catch (notifErr) {
+                console.warn('Mobile browser notification fallback:', notifErr);
             }
 
             // 2. Dispatch via Webhook
@@ -2525,21 +2769,32 @@ function setupAutoReminderTrigger() {
         }
 
         function requestNotificationPermission() {
+            playChimeSound();
             if (!("Notification" in window)) {
-                alert("Trình duyệt không hỗ trợ thông báo đẩy.");
+                showToast('Trên điện thoại, thông báo sẽ gửi trực tiếp về Gmail của bạn đúng giờ!', 'info');
                 return;
             }
-            Notification.requestPermission().then(permission => {
-                updateNotificationBtnStatus();
-                if (permission === 'granted') {
-                    showToast('Đã bật chuông & thông báo màn hình!', 'success');
-                    playChimeSound();
-                    new Notification("Phòng Kinh Doanh TaskHub", {
-                        body: "Hệ thống sẵn sàng gửi chuông và thông báo nhắc việc đúng giờ!",
-                        icon: "https://cdn-icons-png.flaticon.com/512/3602/3602145.png"
-                    });
+            try {
+                const handlePerm = (permission) => {
+                    updateNotificationBtnStatus();
+                    if (permission === 'granted') {
+                        showToast('Đã bật thông báo màn hình & chuông báo thành công!', 'success');
+                        try {
+                            new Notification("Phòng Kinh Doanh TaskHub", {
+                                body: "Hệ thống đã sẵn sàng gửi thông báo nhắc việc tự động!"
+                            });
+                        } catch (e) {}
+                    } else {
+                        showToast('Thông báo vẫn sẽ được gửi tự động qua Gmail đúng giờ.', 'info');
+                    }
+                };
+                const res = Notification.requestPermission(handlePerm);
+                if (res && typeof res.then === 'function') {
+                    res.then(handlePerm).catch(() => {});
                 }
-            });
+            } catch (e) {
+                showToast('Đã bật âm thanh chuông báo! Email nhắc việc sẽ gửi qua Gmail.', 'success');
+            }
         }
 
         function updateNotificationBtnStatus() {
@@ -2675,19 +2930,19 @@ function setupAutoReminderTrigger() {
                         const nextAssignee = getNextAssigneeForTask(task, today);
                         if (!nextAssignee) return '';
                         return `
-                            <div class="px-2.5 py-1.5 rounded-lg bg-purple-50/70 border border-purple-200/70 flex items-center justify-between text-[11px] gap-2">
-                                <div class="flex items-center gap-1.5 text-purple-900 truncate">
+                            <div class="px-2.5 py-1.5 rounded-lg bg-purple-50/80 border border-purple-200/80 flex flex-wrap items-center justify-between text-[11px] gap-1.5">
+                                <div class="flex items-center gap-1.5 text-purple-900 min-w-0">
                                     <i data-lucide="skip-forward" class="w-3 h-3 text-purple-600 shrink-0"></i>
                                     <span class="text-purple-600 font-medium">Tiếp theo:</span>
                                     <strong class="font-bold truncate text-purple-950">${escapeHtml(nextAssignee.name)}</strong>
                                 </div>
-                                <div class="flex items-center gap-1 shrink-0">
-                                    <button type="button" onclick="openRotationModal(${task.id})" title="Chỉnh thứ tự nhân sự luân phiên & chọn người tiếp theo" class="px-2 py-0.5 rounded bg-white hover:bg-purple-100 text-purple-700 font-bold border border-purple-300 text-[10px] flex items-center gap-1 transition-all">
-                                        <i data-lucide="arrow-left-right" class="w-2.5 h-2.5"></i>
+                                <div class="flex items-center gap-1.5 shrink-0">
+                                    <button type="button" onclick="openRotationModal(${task.id})" title="Chỉnh thứ tự nhân sự luân phiên & chọn người tiếp theo" class="px-2 py-1 rounded-md bg-white hover:bg-purple-100 text-purple-700 font-bold border border-purple-300 text-[10px] flex items-center gap-1 transition-all">
+                                        <i data-lucide="arrow-left-right" class="w-3 h-3"></i>
                                         <span>Thứ tự</span>
                                     </button>
-                                    <button type="button" onclick="advanceRotation(${task.id})" title="Chuyển lượt ngay cho ${escapeHtml(nextAssignee.name)}" class="px-2 py-0.5 rounded bg-purple-600 hover:bg-purple-700 text-white font-bold text-[10px] flex items-center gap-1 shadow-sm transition-all">
-                                        <i data-lucide="skip-forward" class="w-2.5 h-2.5"></i>
+                                    <button type="button" onclick="advanceRotation(${task.id})" title="Chuyển lượt ngay cho ${escapeHtml(nextAssignee.name)}" class="px-2 py-1 rounded-md bg-purple-600 hover:bg-purple-700 text-white font-bold text-[10px] flex items-center gap-1 shadow-sm transition-all">
+                                        <i data-lucide="skip-forward" class="w-3 h-3"></i>
                                         <span>Chuyển lượt</span>
                                     </button>
                                 </div>
@@ -2740,11 +2995,13 @@ function setupAutoReminderTrigger() {
             });
 
             const tbody = document.getElementById('allTasksTableBody');
+            const mobileList = document.getElementById('allTasksMobileList');
             const empty = document.getElementById('allTasksEmptyState');
             if (!tbody) return;
 
             if (filtered.length === 0) {
                 tbody.innerHTML = '';
+                if (mobileList) mobileList.innerHTML = '';
                 if (empty) empty.classList.remove('hidden');
                 return;
             }
@@ -2825,6 +3082,74 @@ function setupAutoReminderTrigger() {
                     </tr>
                 `;
             }).join('');
+
+            if (mobileList) {
+                mobileList.innerHTML = filtered.map(t => {
+                    const isDone = t.status === 'completed';
+                    const assignees = getAssignedPersonnelForTask(t, today);
+                    const assignedNames = assignees.map(a => a.name).join(', ') || 'Chưa phân công';
+                    const nextAssignee = getNextAssigneeForTask(t, today);
+                    const timeDisplay = t.slot === 'all_day_3' ? '3 ca (09:00, 12:00, 16:30)' : t.scheduled_time;
+
+                    return `
+                        <div class="bg-white rounded-xl border ${isDone ? 'border-emerald-200 bg-emerald-50/20' : 'border-slate-200'} p-3.5 shadow-sm space-y-2.5">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="flex items-start gap-2.5 min-w-0">
+                                    <input type="checkbox" ${isDone ? 'checked' : ''} onchange="toggleTaskStatus(${t.id})" class="mt-0.5 rounded w-4 h-4 text-blue-600 focus:ring-blue-500 cursor-pointer">
+                                    <div class="min-w-0">
+                                        <div class="font-bold text-slate-900 text-sm ${isDone ? 'line-through text-slate-400' : ''}">${escapeHtml(t.title)}</div>
+                                        ${t.description ? `<p class="text-xs text-slate-500 mt-0.5">${escapeHtml(t.description)}</p>` : ''}
+                                    </div>
+                                </div>
+                                ${priorityBadges[t.priority] || priorityBadges.medium}
+                            </div>
+
+                            <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs">
+                                <span class="font-mono font-bold text-slate-700 text-[11px] px-2 py-0.5 rounded bg-slate-100 border border-slate-200">⏰ ${timeDisplay}</span>
+                                <div>${modeLabels[t.assignee_mode] || modeLabels['single']}</div>
+                            </div>
+
+                            <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+                                <div>
+                                    <span class="text-slate-500">Hôm nay:</span>
+                                    <strong class="text-slate-900 ml-1">${escapeHtml(assignedNames)}</strong>
+                                </div>
+                                ${nextAssignee ? `
+                                    <div class="text-purple-700">
+                                        <span>Tiếp theo:</span>
+                                        <strong class="font-bold text-purple-900 ml-1">${escapeHtml(nextAssignee.name)}</strong>
+                                    </div>
+                                ` : ''}
+                            </div>
+
+                            <div class="flex flex-wrap items-center justify-between gap-1.5 pt-1">
+                                <div class="flex flex-wrap items-center gap-1.5">
+                                    ${(t.assignee_mode && t.assignee_mode.includes('rotation')) ? `
+                                        <button onclick="openRotationModal(${t.id})" class="px-2.5 py-1.5 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs border border-purple-200 flex items-center gap-1">
+                                            <i data-lucide="arrow-left-right" class="w-3.5 h-3.5"></i> Thứ tự
+                                        </button>
+                                        <button onclick="advanceRotation(${t.id})" class="px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1 shadow-sm">
+                                            <i data-lucide="skip-forward" class="w-3.5 h-3.5"></i> Chuyển lượt
+                                        </button>
+                                    ` : ''}
+                                    <button onclick="sendReminderNow(${t.id})" class="px-2.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-xs border border-blue-200 flex items-center gap-1">
+                                        <i data-lucide="send" class="w-3.5 h-3.5"></i> Nhắc ngay
+                                    </button>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <button onclick="openEditTaskModal(${t.id})" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 border border-slate-200">
+                                        <i data-lucide="pencil" class="w-4 h-4"></i>
+                                    </button>
+                                    <button onclick="deleteTask(${t.id})" class="p-1.5 rounded-lg hover:bg-red-50 text-red-500 border border-red-200">
+                                        <i data-lucide="trash" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
             lucide.createIcons();
         }
 
@@ -2842,7 +3167,7 @@ function setupAutoReminderTrigger() {
                 days.push(d);
             }
 
-            headerRow.innerHTML = `<th class="py-3 px-3 w-48 text-left">Công Việc</th>` + days.map(d => {
+            headerRow.innerHTML = `<th class="py-3 px-3 min-w-[140px] sm:w-48 text-left sticky left-0 bg-slate-50 z-10 shadow-sm">Công Việc</th>` + days.map(d => {
                 const dayName = d.toLocaleDateString('vi-VN', { weekday: 'short' });
                 const dateStr = `${d.getDate()}/${d.getMonth() + 1}`;
                 const isToday = d.toDateString() === today.toDateString();
@@ -2879,7 +3204,7 @@ function setupAutoReminderTrigger() {
 
                 return `
                     <tr class="hover:bg-slate-50">
-                        <td class="py-2.5 px-3 font-semibold text-slate-800">
+                        <td class="py-2.5 px-3 font-semibold text-slate-800 sticky left-0 bg-white z-10 shadow-sm min-w-[140px]">
                             <div>${escapeHtml(task.title)}</div>
                             <div class="text-[10px] text-slate-400 font-mono">${task.scheduled_time}</div>
                         </td>
@@ -3087,6 +3412,9 @@ function setupAutoReminderTrigger() {
             task.status = task.status === 'completed' ? 'pending' : 'completed';
             saveState();
             renderAll();
+            if (appState.settings.auto_save_sheet !== false) {
+                saveTasksToGoogleSheet(true);
+            }
         }
 
         function saveTask(e) {
@@ -3150,7 +3478,7 @@ function setupAutoReminderTrigger() {
             showToast('Đã xóa công việc.', 'success');
 
             if (appState.settings.auto_save_sheet !== false) {
-                saveTasksToGoogleSheet(true);
+                saveTasksToGoogleSheet(true, appState.tasks.length === 0);
             }
         }
 
@@ -3295,7 +3623,7 @@ function setupAutoReminderTrigger() {
             showToast('Đã xóa nhân sự.', 'success');
 
             if (appState.settings.auto_save_sheet !== false) {
-                saveEmployeesToGoogleSheet(true);
+                saveEmployeesToGoogleSheet(true, appState.employees.length === 0);
             }
         }
 
@@ -3366,6 +3694,15 @@ function setupAutoReminderTrigger() {
             if (activeBtn) {
                 activeBtn.classList.add('active');
                 activeBtn.classList.remove('text-slate-600', 'hover:bg-slate-100');
+                try { activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); } catch (e) {}
+            }
+
+            document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            const activeMobBtn = document.getElementById(`mobTabBtn-${tabId}`);
+            if (activeMobBtn) {
+                activeMobBtn.classList.add('active');
             }
 
             document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.add('hidden'));
